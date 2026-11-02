@@ -55,4 +55,3 @@ ffmpeg -i f.jpg -vf "crop=380:470:50:40" out.jpg
 
 - `yt-dlp` установлен в `C:\Users\Alex\AppData\Roaming\Python\Python315\Scripts`, добавлен в пользовательский PATH.
 - `ffmpeg` — `C:\Users\Alex\AppData\Local\Temp\opencode\bin\ffmpeg.exe` (из `imageio-ffmpeg`).
-- `youtube-mcp.get_video_frame` требует перезапуска OpenCode/MCP, чтобы увидеть новый PATH (запущенные процессы держат старый снимок окружения).
