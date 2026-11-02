@@ -150,3 +150,13 @@ test('episode 3 carries clipobol and draw-song rounds', () => {
     assert.ok(round.options.includes(round.answer));
   }
 });
+
+test('all shipped content rounds provide hints', () => {
+  for (const pack of episodes) {
+    for (const [exp, rounds] of Object.entries(pack.rounds)) {
+      for (const round of rounds) {
+        assert.ok(round.hint, `${pack.id}:${exp} round without hint`);
+      }
+    }
+  }
+});

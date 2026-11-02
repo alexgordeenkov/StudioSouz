@@ -241,6 +241,68 @@ test('host selects an episode and the state carries available experiments', asyn
   assert.equal(s.payload.availableExperiments[0].id, 'test');
 });
 
+test('host reveals a hint and everyone sees it; non-host cannot', async () => {
+  const exp = {
+    id: 'q',
+    name: 'Q',
+    rules: '',
+    rounds: [{ answer: 'A', hint: 'H' }],
+    isCorrect: () => true,
+  };
+  const party = new Party({ code: 'ABCD', experiments: { q: exp } });
+  const host = mkConn('host');
+  const ctrl = mkConn('controller');
+  await handleMessage(party, host, { type: 'start-experiment', experimentId: 'q' }, [host, ctrl]);
+  await handleMessage(party, host, { type: 'start-round' }, [host, ctrl]);
+
+  const denied = await handleMessage(party, ctrl, { type: 'reveal-hint' }, [host, ctrl]);
+  assert.ok(denied.some((e) => e.payload.type === 'error'));
+
+  const effects = await handleMessage(party, host, { type: 'reveal-hint' }, [host, ctrl]);
+  const broadcast = effects.find((e) => e.kind === 'broadcast');
+  assert.equal(broadcast.payload.round.data.hint, 'H');
+  assert.equal(broadcast.payload.hintRevealed, true);
+  const hostState = effects.find((e) => e.kind === 'direct' && e.target === host);
+  assert.equal(hostState.payload.round.data.answer, 'A');
+});
+
+test('host adjusts a score; non-host cannot', async () => {
+  const party = makeParty();
+  const host = mkConn('host');
+  const a = mkConn('controller');
+  await handleMessage(party, a, { type: 'join', name: 'A', code: 'ABCD' }, [host, a]);
+  const id = a.participantId;
+  await handleMessage(party, host, { type: 'start-experiment', experimentId: 'test' }, [host, a]);
+  await handleMessage(party, host, { type: 'start-round' }, [host, a]);
+  await handleMessage(party, host, { type: 'reveal' }, [host, a]);
+
+  const denied = await handleMessage(
+    party,
+    a,
+    { type: 'adjust-score', participantId: id, delta: 1 },
+    [host, a]
+  );
+  assert.ok(denied.some((e) => e.payload.type === 'error'));
+
+  await handleMessage(party, host, { type: 'adjust-score', participantId: id, delta: 1 }, [host, a]);
+  assert.equal(party.getState().participants[0].score, 1);
+});
+
+test('host restarts media; non-host cannot', async () => {
+  const party = makeParty();
+  const host = mkConn('host');
+  const ctrl = mkConn('controller');
+  await handleMessage(party, host, { type: 'media-play', title: 'Песня' }, [host, ctrl]);
+  const before = party.getState().media.restartToken ?? 0;
+
+  const denied = await handleMessage(party, ctrl, { type: 'media-control', action: 'restart' }, [host, ctrl]);
+  assert.ok(denied.some((e) => e.payload.type === 'error'));
+
+  await handleMessage(party, host, { type: 'media-control', action: 'restart' }, [host, ctrl]);
+  assert.equal(party.getState().media.restartToken, before + 1);
+  assert.equal(party.getState().media.playing, true);
+});
+
 test('next-round autoplays the new round media and clears the old one', async () => {
   const mediaExp = {
     id: 'media',

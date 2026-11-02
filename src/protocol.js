@@ -31,7 +31,18 @@ export async function handleMessage(party, conn, message, conns = []) {
     effects.push({ kind: 'direct', target: conn, payload });
   const broadcast = (/** @type {Record<string, any>} */ payload) =>
     effects.push({ kind: 'broadcast', target: null, payload });
-  const state = () => broadcast({ type: 'state', ...party.getState() });
+  const state = () => {
+    broadcast({ type: 'state', ...party.getState() });
+    for (const c of conns) {
+      if (c.role === 'host') {
+        effects.push({
+          kind: 'direct',
+          target: c,
+          payload: { type: 'state', ...party.getState({ forHost: true }) },
+        });
+      }
+    }
+  };
 
   const requireHost = () => {
     if (conn.role !== 'host') {
@@ -136,6 +147,17 @@ export async function handleMessage(party, conn, message, conns = []) {
       break;
     }
 
+    case 'adjust-score': {
+      if (!requireHost()) break;
+      try {
+        party.adjustScore(String(message.participantId ?? ''), Number(message.delta));
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
     case 'media-play': {
       if (!requireHost()) break;
       try {
@@ -156,6 +178,7 @@ export async function handleMessage(party, conn, message, conns = []) {
       const action = message.action;
       if (action === 'pause') party.pauseMedia();
       else if (action === 'play') party.resumeMedia();
+      else if (action === 'restart') party.restartMedia();
       else if (action === 'skip') party.skipMedia();
       state();
       break;
@@ -237,6 +260,17 @@ export async function handleMessage(party, conn, message, conns = []) {
       if (!requireHost()) break;
       try {
         party.revealRound();
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
+    case 'reveal-hint': {
+      if (!requireHost()) break;
+      try {
+        party.revealHint();
         state();
       } catch (e) {
         direct({ type: 'error', message: /** @type {Error} */ (e).message });

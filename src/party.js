@@ -49,7 +49,7 @@
  * @returns {any}
  */
 function publicRound(round) {
-  const { answer, accept, ...rest } = round;
+  const { answer, accept, hint, ...rest } = round;
   return rest;
 }
 
@@ -95,6 +95,8 @@ export class Party {
     this.answers = new Map();
     /** @type {{ answer: string, results: RoundResult[], firstCorrectId: string | null } | null} */
     this.reveal = null;
+    /** @type {boolean} */
+    this.hintRevealed = false;
     /** @type {any} */
     this.mediaResolver = mediaResolver;
     /** @type {any} */
@@ -142,6 +144,20 @@ export class Party {
   markConnected(id) {
     const p = this.participants.get(id);
     if (p) p.connected = true;
+  }
+
+  /**
+   * Ручное начисление баллов ведущим. Счёт не опускается ниже нуля.
+   * @param {string} participantId
+   * @param {number} delta
+   */
+  adjustScore(participantId, delta) {
+    if (this.phase !== 'reveal') throw new Error('Баллы вручную — только на итогах раунда');
+    const p = this.participants.get(String(participantId));
+    if (!p) throw new Error('Участник не найден');
+    const d = Number(delta);
+    if (d !== 1 && d !== -1) throw new Error('Можно только +1 или −1');
+    p.score = Math.max(0, p.score + d);
   }
 
   /**
@@ -217,6 +233,7 @@ export class Party {
     this.roundIndex = -1;
     this.answers.clear();
     this.reveal = null;
+    this.hintRevealed = false;
     this.pendingDrawerId = null;
   }
 
@@ -242,6 +259,7 @@ export class Party {
     this.roundIndex++;
     this.answers.clear();
     this.reveal = null;
+    this.hintRevealed = false;
     this.media = null;
     this.phase = 'round';
     this.drawerId = null;
@@ -270,6 +288,13 @@ export class Party {
     if (!text) throw new Error('Пустой ответ');
     if (text.length > 60) throw new Error('Слишком длинный ответ');
     this.answers.set(participantId, { value: text, at });
+  }
+
+  revealHint() {
+    if (this.phase !== 'round' || !this.experiment) throw new Error('Сейчас не раунд');
+    const round = this.experiment.rounds[this.roundIndex];
+    if (!round || !round.hint) throw new Error('У этого раунда нет подсказки');
+    this.hintRevealed = true;
   }
 
   revealRound() {
@@ -339,6 +364,8 @@ export class Party {
     this.roundIndex = -1;
     this.answers.clear();
     this.reveal = null;
+    this.hintRevealed = false;
+    this.media = null;
   }
 
   finishParty() {
@@ -367,6 +394,15 @@ export class Party {
     this.media = null;
   }
 
+  restartMedia() {
+    if (!this.media) return;
+    this.media = {
+      ...this.media,
+      playing: true,
+      restartToken: (this.media.restartToken ?? 0) + 1,
+    };
+  }
+
   /** @param {any} stroke */
   draw(stroke) {
     if (!this.drawerId) throw new Error('Сейчас никто не рисует');
@@ -391,12 +427,24 @@ export class Party {
     this.media = { ...media, playing: true, muted: !!(r.muted ?? ref.muted) };
   }
 
-  getState() {
+  /**
+   * @param {{ forHost?: boolean }} [opts]
+   */
+  getState({ forHost = false } = {}) {
     const exp = this.experiment;
-    const round =
-      this.phase === 'round' && exp
-        ? { index: this.roundIndex, total: exp.rounds.length, data: publicRound(exp.rounds[this.roundIndex]) }
-        : null;
+    /** @type {{ index: number, total: number, data: any } | null} */
+    let round = null;
+    if (this.phase === 'round' && exp) {
+      const raw = exp.rounds[this.roundIndex];
+      const data = publicRound(raw);
+      if (forHost) {
+        data.answer = raw.answer;
+        data.hint = raw.hint;
+      } else if (this.hintRevealed && raw.hint) {
+        data.hint = raw.hint;
+      }
+      round = { index: this.roundIndex, total: exp.rounds.length, data };
+    }
     return {
       code: this.code,
       mode: this.mode,
@@ -414,6 +462,7 @@ export class Party {
         : null,
       round,
       reveal: this.reveal,
+      hintRevealed: this.hintRevealed,
       answersCount: this.answers.size,
       speedBonus: this.speedBonus,
       media: this.media,

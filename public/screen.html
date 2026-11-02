@@ -45,6 +45,7 @@
       let mediaKey = null;
       let ytFrame = null;
       let audioEl = null;
+      let lastRestartToken = 0;
 
       function promptOverlay(m) {
         const prompt = m.round && m.round.data && m.round.data.prompt;
@@ -82,6 +83,22 @@
             )}" ${media.playing ? 'autoplay' : ''} ${media.muted ? 'muted' : ''} controls></audio></div>${promptOverlay(m)}`;
             audioEl = layer.querySelector('audio');
             ytFrame = null;
+          }
+          lastRestartToken = media.restartToken ?? 0;
+        } else if ((media.restartToken ?? 0) !== lastRestartToken) {
+          lastRestartToken = media.restartToken ?? 0;
+          if (media.source === 'youtube' && ytFrame) {
+            ytFrame.contentWindow.postMessage(
+              JSON.stringify({ event: 'command', func: 'seekTo', args: [0, true] }),
+              '*'
+            );
+            ytFrame.contentWindow.postMessage(
+              JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
+              '*'
+            );
+          } else if (media.source === 'local' && audioEl) {
+            audioEl.currentTime = 0;
+            audioEl.play().catch(() => {});
           }
         } else if (media.source === 'youtube' && ytFrame) {
           ytFrame.contentWindow.postMessage(
@@ -144,6 +161,7 @@
                   <span class="pill">Раунд ${m.round.index + 1} / ${m.round.total}</span>
                   <span class="answers-count">Ответов: ${m.answersCount}</span>
                 </div>
+                ${m.round.data.hint ? `<div class="hint-banner">Подсказка: ${esc(m.round.data.hint)}</div>` : ''}
                 <div class="hint">Рисует: ${esc(drawer ? drawer.name : '—')}. Угадывайте название песни на пультах.</div>
               </div>`;
             redrawCanvas(drawCanvas, m.drawing);
@@ -155,6 +173,7 @@
                 <span class="pill">Раунд ${m.round.index + 1} / ${m.round.total}</span>
                 <span class="answers-count">Ответов: ${m.answersCount}</span>
               </div>
+              ${m.round.data.hint ? `<div class="hint-banner">Подсказка: ${esc(m.round.data.hint)}</div>` : ''}
               ${m.round.data.quote ? `<blockquote class="round-quote">«${esc(m.round.data.quote)}»</blockquote>` : ''}
               ${m.round.data.prompt ? `<h2 class="round-prompt">${esc(m.round.data.prompt)}</h2>` : ''}
               ${m.round.data.text ? `<p class="round-text">${esc(m.round.data.text)}</p>` : ''}

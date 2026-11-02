@@ -940,6 +940,87 @@ button.primary:active {
   text-wrap: balance;
 }
 
+.host-memo {
+  margin: 10px 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px dashed var(--border);
+  background: rgba(255, 244, 226, 0.05);
+  text-align: left;
+}
+
+.memo-row {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  margin: 4px 0;
+  color: var(--cream);
+}
+
+.memo-row b {
+  color: var(--gold);
+}
+
+.hint-banner {
+  margin: 8px 0 14px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: rgba(246, 196, 69, 0.16);
+  border: 1px solid var(--gold);
+  color: var(--cream);
+  font-family: var(--display);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.score-adj {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.score-btn {
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: rgba(255, 244, 226, 0.06);
+  color: var(--cream);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.media-bar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(20, 10, 0, 0.92);
+  color: var(--cream);
+}
+
+.media-bar.hidden {
+  display: none;
+}
+
+.media-bar-title {
+  flex: 1;
+  font-family: var(--display);
+  text-transform: uppercase;
+  font-size: 14px;
+  color: var(--gold);
+}
+
+.media-bar .btn-row {
+  margin: 0;
+}
+
 .media-prompt {
   position: absolute;
   left: 50%;
