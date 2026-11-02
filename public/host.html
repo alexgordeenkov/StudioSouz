@@ -14,6 +14,23 @@
 
     <main id="stage" class="stage"></main>
 
+    <section class="card media-card" id="media-panel">
+      <div class="lobby-head">
+        <h2>Медиа</h2>
+        <span class="pill" id="media-now">—</span>
+      </div>
+      <div class="media-controls">
+        <input id="media-title" placeholder="Название песни или ссылка YouTube" />
+        <div class="btn-row">
+          <button class="primary" id="media-play">Играть</button>
+          <button class="secondary" id="media-pause">Пауза</button>
+          <button class="secondary" id="media-resume">Продолжить</button>
+          <button class="secondary" id="media-skip">Пропуск</button>
+        </div>
+      </div>
+      <ul class="local-list" id="local-list"></ul>
+    </section>
+
     <script type="module">
       import { el, esc, connect, send, loadConfig } from '/client.js';
 
@@ -38,10 +55,48 @@
         state: (m) => {
           state = m;
           render(m);
+          updateMediaNow(m);
         },
         error: (m) => {
           if (m && m.message) console.warn('host error:', m.message);
         },
+      });
+
+      let localFiles = [];
+      fetch('/api/media/local')
+        .then((r) => r.json())
+        .then((list) => {
+          localFiles = list;
+          el('local-list').innerHTML = list
+            .map((f) => `<li><button class="secondary" data-local="${esc(f.name)}">${esc(f.name)}</button></li>`)
+            .join('');
+        })
+        .catch(() => {});
+
+      function updateMediaNow(m) {
+        const now = el('media-now');
+        if (!m.media) {
+          now.textContent = '—';
+          return;
+        }
+        now.textContent = `${m.media.title} · ${m.media.playing ? 'играет' : 'пауза'}`;
+      }
+
+      document.addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        if (button.id === 'media-play') {
+          const title = el('media-title').value.trim();
+          if (title) send(ws, { type: 'media-play', title });
+        } else if (button.id === 'media-pause') {
+          send(ws, { type: 'media-control', action: 'pause' });
+        } else if (button.id === 'media-resume') {
+          send(ws, { type: 'media-control', action: 'play' });
+        } else if (button.id === 'media-skip') {
+          send(ws, { type: 'media-control', action: 'skip' });
+        } else if (button.dataset.local) {
+          send(ws, { type: 'media-play', localFile: button.dataset.local });
+        }
       });
 
       document.addEventListener('click', (event) => {

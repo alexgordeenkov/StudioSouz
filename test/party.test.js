@@ -150,3 +150,19 @@ test('speed bonus can be turned off by the host', () => {
   assert.equal(points.A, 1);
   assert.equal(points.B, 1);
 });
+
+test('media can be played, paused, resumed and skipped', async () => {
+  const resolver = {
+    resolve: async () => ({ source: 'youtube', youtubeId: 'abc123DEF45', title: 'Тест' }),
+  };
+  const party = new Party({ code: 'ABCD', mediaResolver: resolver });
+  const media = await party.playMedia({ title: 'Тест' });
+  assert.equal(media.source, 'youtube');
+  assert.equal(party.getState().media.playing, true);
+  party.pauseMedia();
+  assert.equal(party.getState().media.playing, false);
+  party.resumeMedia();
+  assert.equal(party.getState().media.playing, true);
+  party.skipMedia();
+  assert.equal(party.getState().media, null);
+});

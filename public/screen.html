@@ -13,6 +13,7 @@
     </header>
 
     <main id="stage" class="stage"></main>
+    <div id="media" class="media-layer"></div>
 
     <script type="module">
       import { el, esc, connect, loadConfig } from '/client.js';
@@ -29,8 +30,56 @@
         state: (m) => {
           state = m;
           render(m);
+          renderMedia(m);
         },
       });
+
+      let mediaKey = null;
+      let ytFrame = null;
+      let audioEl = null;
+
+      function renderMedia(m) {
+        const layer = el('media');
+        const media = m.media;
+        if (!media) {
+          layer.classList.remove('active');
+          if (mediaKey) {
+            layer.innerHTML = '';
+            mediaKey = null;
+            ytFrame = null;
+            audioEl = null;
+          }
+          return;
+        }
+        layer.classList.add('active');
+        const key = media.source + ':' + (media.youtubeId || media.localUrl);
+        if (key !== mediaKey) {
+          mediaKey = key;
+          if (media.source === 'youtube') {
+            layer.innerHTML = `<div class="media-frame"><iframe src="https://www.youtube.com/embed/${encodeURIComponent(
+              media.youtubeId
+            )}?autoplay=${media.playing ? 1 : 0}&enablejsapi=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="${esc(
+              media.title
+            )}"></iframe></div>`;
+            ytFrame = layer.querySelector('iframe');
+            audioEl = null;
+          } else {
+            layer.innerHTML = `<div class="media-frame audio-frame"><audio src="${esc(
+              media.localUrl
+            )}" ${media.playing ? 'autoplay' : ''} controls></audio></div>`;
+            audioEl = layer.querySelector('audio');
+            ytFrame = null;
+          }
+        } else if (media.source === 'youtube' && ytFrame) {
+          ytFrame.contentWindow.postMessage(
+            JSON.stringify({ event: 'command', func: media.playing ? 'playVideo' : 'pauseVideo', args: [] }),
+            '*'
+          );
+        } else if (media.source === 'local' && audioEl) {
+          if (media.playing) audioEl.play().catch(() => {});
+          else audioEl.pause();
+        }
+      }
 
       const modeLabel = (mode) => (mode === 'teams' ? 'Команды' : 'Каждый сам за себя');
 

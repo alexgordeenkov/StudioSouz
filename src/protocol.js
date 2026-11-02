@@ -22,9 +22,9 @@ import { Party } from './party.js';
  * @param {Conn} conn
  * @param {Record<string, any>} message
  * @param {Conn[]} [conns]
- * @returns {Effect[]}
+ * @returns {Promise<Effect[]>}
  */
-export function handleMessage(party, conn, message, conns = []) {
+export async function handleMessage(party, conn, message, conns = []) {
   /** @type {Effect[]} */
   const effects = [];
   const direct = (/** @type {Record<string, any>} */ payload) =>
@@ -110,6 +110,31 @@ export function handleMessage(party, conn, message, conns = []) {
     case 'set-speed-bonus': {
       if (!requireHost()) break;
       party.setSpeedBonus(!!message.enabled);
+      state();
+      break;
+    }
+
+    case 'media-play': {
+      if (!requireHost()) break;
+      try {
+        await party.playMedia({
+          title: message.title,
+          youtubeId: message.youtubeId,
+          localFile: message.localFile,
+        });
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
+    case 'media-control': {
+      if (!requireHost()) break;
+      const action = message.action;
+      if (action === 'pause') party.pauseMedia();
+      else if (action === 'play') party.resumeMedia();
+      else if (action === 'skip') party.skipMedia();
       state();
       break;
     }

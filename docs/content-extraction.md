@@ -53,5 +53,5 @@ ffmpeg -i f.jpg -vf "crop=380:470:50:40" out.jpg
 
 ## Инструменты
 
-- `yt-dlp` установлен в `C:\Users\Alex\AppData\Roaming\Python\Python315\Scripts`, добавлен в пользовательский PATH.
+- `yt-dlp` не установлен (при необходимости повторить извлечение: `python -m pip install --user yt-dlp`).
 - `ffmpeg` — `C:\Users\Alex\AppData\Local\Temp\opencode\bin\ffmpeg.exe` (из `imageio-ffmpeg`).
