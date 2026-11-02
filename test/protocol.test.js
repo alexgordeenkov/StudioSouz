@@ -241,6 +241,31 @@ test('host selects an episode and the state carries available experiments', asyn
   assert.equal(s.payload.availableExperiments[0].id, 'test');
 });
 
+test('host reveals a hint and everyone sees it; non-host cannot', async () => {
+  const exp = {
+    id: 'q',
+    name: 'Q',
+    rules: '',
+    rounds: [{ answer: 'A', hint: 'H' }],
+    isCorrect: () => true,
+  };
+  const party = new Party({ code: 'ABCD', experiments: { q: exp } });
+  const host = mkConn('host');
+  const ctrl = mkConn('controller');
+  await handleMessage(party, host, { type: 'start-experiment', experimentId: 'q' }, [host, ctrl]);
+  await handleMessage(party, host, { type: 'start-round' }, [host, ctrl]);
+
+  const denied = await handleMessage(party, ctrl, { type: 'reveal-hint' }, [host, ctrl]);
+  assert.ok(denied.some((e) => e.payload.type === 'error'));
+
+  const effects = await handleMessage(party, host, { type: 'reveal-hint' }, [host, ctrl]);
+  const broadcast = effects.find((e) => e.kind === 'broadcast');
+  assert.equal(broadcast.payload.round.data.hint, 'H');
+  assert.equal(broadcast.payload.hintRevealed, true);
+  const hostState = effects.find((e) => e.kind === 'direct' && e.target === host);
+  assert.equal(hostState.payload.round.data.answer, 'A');
+});
+
 test('next-round autoplays the new round media and clears the old one', async () => {
   const mediaExp = {
     id: 'media',

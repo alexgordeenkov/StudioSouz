@@ -157,7 +157,7 @@ wss.on('connection', (ws, req) => {
   const conn = { role, participantId: null, ws };
   conns.push(conn);
 
-  safeSend(ws, { type: 'state', ...party.getState() });
+  safeSend(ws, { type: 'state', ...party.getState({ forHost: role === 'host' }) });
 
   ws.on('message', async (raw) => {
     /** @type {Record<string, any>} */

@@ -60,6 +60,8 @@
           send(ws, { type: 'set-drawer', participantId: button.dataset.drawer });
         } else if (button.id === 'start-round') {
           send(ws, { type: 'start-round' });
+        } else if (button.id === 'reveal-hint') {
+          send(ws, { type: 'reveal-hint' });
         } else if (button.id === 'reveal') {
           send(ws, { type: 'reveal' });
         } else if (button.id === 'next-round') {
@@ -108,6 +110,22 @@
                 .join('')}
             </div>
           </div>`;
+      }
+
+      function hostMemo(m) {
+        const data = (m.round && m.round.data) || {};
+        if (!data.answer && !data.hint) return '';
+        return `
+          <div class="host-memo">
+            ${data.answer ? `<div class="memo-row"><span class="label">Ответ</span><b>${esc(data.answer)}</b></div>` : ''}
+            ${data.hint ? `<div class="memo-row"><span class="label">Подсказка</span><span>${esc(data.hint)}</span></div>` : ''}
+          </div>`;
+      }
+
+      function hintButton(m) {
+        const data = (m.round && m.round.data) || {};
+        if (!data.hint || m.hintRevealed) return '';
+        return '<button class="secondary" id="reveal-hint">Показать подсказку</button>';
       }
 
       function render(m) {
@@ -184,7 +202,8 @@
                   <span class="answers-count">Ответов: ${m.answersCount} из ${m.participants.length}</span>
                 </div>
                 <div class="hint">Рисунок на общем экране. Когда все угадали — раскройте ответ.</div>
-                <div class="btn-row"><button class="primary" id="reveal">Показать ответ</button></div>
+                ${hostMemo(m)}
+                <div class="btn-row">${hintButton(m)}<button class="primary" id="reveal">Показать ответ</button></div>
               </div>`;
             return;
           }
@@ -200,7 +219,8 @@
               <div class="collage small">
                 ${m.round.data.image ? `<img src="${esc(m.round.data.image)}" alt="Коллаж" />` : '<div class="hint">Задание на общем экране</div>'}
               </div>
-              <div class="btn-row"><button class="primary" id="reveal">Показать ответ</button></div>
+              ${hostMemo(m)}
+              <div class="btn-row">${hintButton(m)}<button class="primary" id="reveal">Показать ответ</button></div>
             </div>`;
           return;
         }
