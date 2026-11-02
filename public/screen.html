@@ -155,7 +155,9 @@
                 <span class="pill">Раунд ${m.round.index + 1} / ${m.round.total}</span>
                 <span class="answers-count">Ответов: ${m.answersCount}</span>
               </div>
+              ${m.round.data.quote ? `<blockquote class="round-quote">«${esc(m.round.data.quote)}»</blockquote>` : ''}
               ${m.round.data.prompt ? `<h2 class="round-prompt">${esc(m.round.data.prompt)}</h2>` : ''}
+              ${m.round.data.text ? `<p class="round-text">${esc(m.round.data.text)}</p>` : ''}
               ${m.round.data.image ? `<div class="collage"><img src="${esc(m.round.data.image)}" alt="Коллаж" /></div>` : ''}
               <div class="hint">${m.round.data.options ? 'Выберите ответ на пульте. Кто быстрее — тому бонус.' : 'Введите ответ на пульте. Кто быстрее — тому бонус.'}</div>
             </div>`;
