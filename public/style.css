@@ -865,3 +865,51 @@ button.primary:active {
   margin-bottom: 12px;
 }
 
+/* ---------- Quiz prompts and options ---------- */
+.round-prompt {
+  font-family: var(--display);
+  font-size: clamp(20px, 2.6vw, 44px);
+  color: var(--cream);
+  text-transform: uppercase;
+  margin: 8px 0 18px;
+}
+
+.media-prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 8%;
+  transform: translateX(-50%);
+  max-width: 90vw;
+  padding: 10px 22px;
+  background: rgba(10, 5, 0, 0.82);
+  border-radius: 10px;
+  font-family: var(--display);
+  text-transform: uppercase;
+  color: var(--cream);
+  font-size: clamp(16px, 1.8vw, 30px);
+  text-align: center;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.option {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(246, 196, 69, 0.16), rgba(246, 196, 69, 0.05));
+  color: var(--cream);
+  font-family: var(--display);
+  text-transform: uppercase;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.option:active {
+  transform: scale(0.99);
+}
+
