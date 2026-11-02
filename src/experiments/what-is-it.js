@@ -45,6 +45,17 @@ export const whatIsIt = {
       accept: ['акробатрудинов', 'акробатор'],
     },
     { image: '/media/what-is-it/07.jpg', answer: 'Харлама', accept: ['харлама'] },
+    // 2-й выпуск
+    { image: '/media/what-is-it/09.jpg', answer: 'Лабутенко', accept: ['лабутенко', 'лагутенко'] },
+    { image: '/media/what-is-it/10.jpg', answer: 'Моржуков', accept: ['моржуков'] },
+    { image: '/media/what-is-it/11.jpg', answer: 'Наталифчик', accept: ['наталифчик'] },
+    { image: '/media/what-is-it/12.jpg', answer: 'Шатунож', accept: ['шатунож'] },
+    { image: '/media/what-is-it/13.jpg', answer: 'Павлиношвили', accept: ['павлиношвили', 'павлиашвили'] },
+    { image: '/media/what-is-it/19.jpg', answer: 'Лолитр', accept: ['лолитр'] },
+    { image: '/media/what-is-it/20.jpg', answer: 'Хамелеонтьев', accept: ['хамелеонтьев'] },
+    { image: '/media/what-is-it/14.jpg', answer: 'Курагутин', accept: ['курагутин'] },
+    { image: '/media/what-is-it/16.jpg', answer: 'Дмбузова', accept: ['дмбузова', 'дембузова'] },
+    { image: '/media/what-is-it/17.jpg', answer: 'Бородиназавр', accept: ['бородиназавр', 'бародиназавр'] },
   ],
   /**
    * @param {WhatIsItRound} round
