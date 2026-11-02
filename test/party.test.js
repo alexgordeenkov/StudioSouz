@@ -166,3 +166,40 @@ test('media can be played, paused, resumed and skipped', async () => {
   party.skipMedia();
   assert.equal(party.getState().media, null);
 });
+
+const drawExp = {
+  id: 'draw',
+  name: 'Рисуй',
+  kind: 'drawing',
+  rules: '',
+  rounds: [{ answer: 'Кукла', accept: ['кукла'] }],
+  /** @param {{ accept: string[] }} round @param {string} value */
+  isCorrect(round, value) {
+    return norm(value) === 'кукла';
+  },
+};
+
+test('drawing round assigns a drawer, stores strokes, and skips the drawer in scoring', () => {
+  const party = new Party({ code: 'ABCD', experiments: { draw: drawExp } });
+  const a = party.addParticipant('A');
+  const b = party.addParticipant('B');
+  party.selectExperiment('draw');
+  party.startRound();
+  const state = party.getState();
+  assert.equal(state.experiment?.kind, 'drawing');
+  assert.ok(state.drawerId);
+
+  party.draw({ x0: 0, y0: 0, x1: 1, y1: 1 });
+  assert.equal(party.getState().drawing.length, 1);
+  party.undoDrawing();
+  assert.equal(party.getState().drawing.length, 0);
+  party.draw({ x0: 0, y0: 0, x1: 1, y1: 1 });
+  party.clearDrawing();
+  assert.equal(party.getState().drawing.length, 0);
+
+  const guesser = a.id === party.drawerId ? b : a;
+  party.submitAnswer(guesser.id, 'Кукла');
+  const reveal = party.revealRound();
+  assert.equal(reveal.results.length, 1);
+  assert.equal(reveal.results[0].correct, true);
+});

@@ -22,6 +22,7 @@
  * @property {string} rules
  * @property {T[]} rounds
  * @property {(round: T, value: string) => boolean} isCorrect
+ * @property {string} [kind]
  */
 
 /**
@@ -78,6 +79,10 @@ export class Party {
     this.mediaResolver = mediaResolver;
     /** @type {any} */
     this.media = null;
+    /** @type {string | null} */
+    this.drawerId = null;
+    /** @type {any[]} */
+    this.drawing = [];
   }
 
   /**
@@ -146,6 +151,12 @@ export class Party {
     this.answers.clear();
     this.reveal = null;
     this.phase = 'round';
+    this.drawerId = null;
+    this.drawing = [];
+    if (this.experiment.kind === 'drawing') {
+      const ids = [...this.participants.keys()];
+      if (ids.length) this.drawerId = ids[this.roundIndex % ids.length];
+    }
   }
 
   /**
@@ -172,6 +183,7 @@ export class Party {
     let firstCorrect = null;
 
     for (const p of this.participants.values()) {
+      if (p.id === this.drawerId) continue;
       const a = this.answers.get(p.id);
       const correct = a ? this.experiment.isCorrect(round, a.value) : false;
       results.push({
@@ -245,6 +257,20 @@ export class Party {
     this.media = null;
   }
 
+  /** @param {any} stroke */
+  draw(stroke) {
+    if (!this.drawerId) throw new Error('Сейчас никто не рисует');
+    this.drawing.push(stroke);
+  }
+
+  clearDrawing() {
+    this.drawing = [];
+  }
+
+  undoDrawing() {
+    this.drawing.pop();
+  }
+
   getState() {
     const exp = this.experiment;
     const round =
@@ -261,6 +287,7 @@ export class Party {
             id: exp.id,
             name: exp.name,
             rules: exp.rules,
+            kind: exp.kind ?? 'quiz',
             roundIndex: this.roundIndex,
             totalRounds: exp.rounds.length,
           }
@@ -270,6 +297,8 @@ export class Party {
       answersCount: this.answers.size,
       speedBonus: this.speedBonus,
       media: this.media,
+      drawerId: this.drawerId,
+      drawing: this.drawing,
     };
   }
 }

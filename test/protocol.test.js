@@ -169,3 +169,37 @@ test('non-host cannot control media', async () => {
   const effects = await handleMessage(party, ctrl, { type: 'media-play', title: 'Песня' }, [ctrl]);
   assert.ok(effects.some((e) => e.payload.type === 'error'));
 });
+
+const drawExp = {
+  id: 'draw',
+  name: 'Рисуй',
+  kind: 'drawing',
+  rules: '',
+  rounds: [{ answer: 'Кукла', accept: ['кукла'] }],
+  /** @param {{ accept: string[] }} round @param {string} value */
+  isCorrect(round, value) {
+    return norm(value) === 'кукла';
+  },
+};
+
+test('only the assigned drawer can draw, and strokes are broadcast', async () => {
+  const party = new Party({ code: 'ABCD', experiments: { draw: drawExp } });
+  const host = mkConn('host');
+  const a = mkConn('controller');
+  const b = mkConn('controller');
+  await handleMessage(party, a, { type: 'join', name: 'A', code: 'ABCD' }, [host, a, b]);
+  await handleMessage(party, b, { type: 'join', name: 'B', code: 'ABCD' }, [host, a, b]);
+  await handleMessage(party, host, { type: 'start-experiment', experimentId: 'draw' }, [host, a, b]);
+  await handleMessage(party, host, { type: 'start-round' }, [host, a, b]);
+
+  const drawerId = party.getState().drawerId;
+  const drawer = drawerId === a.participantId ? a : b;
+  const other = drawerId === a.participantId ? b : a;
+
+  const effects = await handleMessage(party, drawer, { type: 'draw', stroke: { x0: 0, y0: 0, x1: 1, y1: 1 } }, [host, a, b]);
+  assert.ok(effects.some((e) => e.payload.type === 'draw'));
+  assert.equal(party.getState().drawing.length, 1);
+
+  const denied = await handleMessage(party, other, { type: 'draw', stroke: { x0: 0, y0: 0, x1: 1, y1: 1 } }, [host, a, b]);
+  assert.ok(denied.some((e) => e.payload.type === 'error'));
+});

@@ -139,6 +139,33 @@ export async function handleMessage(party, conn, message, conns = []) {
       break;
     }
 
+    case 'draw': {
+      if (conn.role !== 'controller' || conn.participantId !== party.drawerId) {
+        direct({ type: 'error', message: 'Рисует только выбранный участник' });
+        break;
+      }
+      if (message.stroke) {
+        party.draw(message.stroke);
+        broadcast({ type: 'draw', stroke: message.stroke });
+      }
+      break;
+    }
+
+    case 'clear-canvas': {
+      const allowed = conn.role === 'host' || conn.participantId === party.drawerId;
+      if (!allowed) break;
+      party.clearDrawing();
+      broadcast({ type: 'canvas', strokes: [] });
+      break;
+    }
+
+    case 'undo-draw': {
+      if (conn.participantId !== party.drawerId) break;
+      party.undoDrawing();
+      broadcast({ type: 'canvas', strokes: party.drawing });
+      break;
+    }
+
     case 'start-experiment': {
       if (!requireHost()) break;
       try {

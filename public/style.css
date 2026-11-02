@@ -840,3 +840,28 @@ button.primary:active {
   width: 100%;
 }
 
+/* ---------- Drawing ---------- */
+.draw-canvas {
+  display: block;
+  width: min(92vw, 1400px);
+  height: auto;
+  margin: 12px auto 0;
+  background: #fffaf0;
+  border-radius: 16px;
+  border: 2px solid var(--border);
+  touch-action: none;
+  cursor: crosshair;
+}
+
+.draw-phone canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #fffaf0;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  touch-action: none;
+  cursor: crosshair;
+  margin-bottom: 12px;
+}
+
