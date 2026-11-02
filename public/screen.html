@@ -6,7 +6,7 @@
     <title>Музыкальные игры — общий экран</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
-  <body class="wide">
+  <body class="wide screen">
     <header class="brand">
       <span class="dot"></span>
       <h1>Музыкальные игры у Машеньки и Лёшика</h1>
@@ -124,6 +124,7 @@
         const stage = el('stage');
         const drawCanvas = el('draw-canvas');
         drawCanvas.classList.add('hidden');
+        stage.classList.toggle('stage-drawing', m.phase === 'round' && m.experiment && m.experiment.kind === 'drawing');
         if (m.phase === 'lobby') {
           stage.innerHTML = `
             <div class="deck">
@@ -168,8 +169,10 @@
                   <span class="pill">Раунд ${m.round.index + 1} / ${m.round.total}</span>
                   <span class="answers-count">Ответов: ${m.answersCount}</span>
                 </div>
-                ${m.round.data.hint ? `<div class="hint-banner">Подсказка: ${esc(m.round.data.hint)}</div>` : ''}
-                <div class="hint">Рисует: ${esc(drawer ? drawer.name : '—')}. Угадывайте название песни на пультах.</div>
+                <div class="round-body round-body-drawing">
+                  ${m.round.data.hint ? `<div class="hint-banner">Подсказка: ${esc(m.round.data.hint)}</div>` : ''}
+                  <div class="hint">Рисует: ${esc(drawer ? drawer.name : '—')}. Угадывайте название песни на пультах.</div>
+                </div>
               </div>`;
             redrawCanvas(drawCanvas, m.drawing);
             return;
@@ -180,12 +183,16 @@
                 <span class="pill">Раунд ${m.round.index + 1} / ${m.round.total}</span>
                 <span class="answers-count">Ответов: ${m.answersCount}</span>
               </div>
-              ${m.round.data.hint ? `<div class="hint-banner">Подсказка: ${esc(m.round.data.hint)}</div>` : ''}
-              ${m.round.data.quote ? `<blockquote class="round-quote">«${esc(m.round.data.quote)}»</blockquote>` : ''}
-              ${m.round.data.prompt ? `<h2 class="round-prompt">${esc(m.round.data.prompt)}</h2>` : ''}
-              ${m.round.data.text ? `<p class="round-text">${esc(m.round.data.text)}</p>` : ''}
-              ${m.round.data.image ? `<div class="collage"><img src="${esc(m.round.data.image)}" alt="Коллаж" /></div>` : ''}
-              <div class="hint">${m.round.data.options ? 'Выберите ответ на пульте. Кто быстрее — тому бонус.' : 'Введите ответ на пульте. Кто быстрее — тому бонус.'}</div>
+              <div class="round-body">
+                ${m.round.data.hint ? `<div class="hint-banner">Подсказка: ${esc(m.round.data.hint)}</div>` : ''}
+                ${m.round.data.quote ? `<blockquote class="round-quote">«${esc(m.round.data.quote)}»</blockquote>` : ''}
+                ${m.round.data.prompt ? `<h2 class="round-prompt">${esc(m.round.data.prompt)}</h2>` : ''}
+                ${m.round.data.text ? `<p class="round-text">${esc(m.round.data.text)}</p>` : ''}
+                ${m.round.data.image ? `<div class="collage"><img src="${esc(m.round.data.image)}" alt="Коллаж" /></div>` : ''}
+              </div>
+              <div class="round-foot">
+                <span class="hint">${m.round.data.options ? 'Выберите ответ на пульте. Кто быстрее — тому бонус.' : 'Введите ответ на пульте. Кто быстрее — тому бонус.'}</span>
+              </div>
             </div>`;
           return;
         }
@@ -194,23 +201,25 @@
           stage.innerHTML = `
             <div class="round">
               <div class="round-head"><span class="pill">Правильный ответ</span></div>
-              <h2 class="answer">${esc(m.reveal.answer)}</h2>
-              <ul class="results">
-                ${m.reveal.results
-                  .map(
-                    (r) => `<li class="result ${r.correct ? 'correct' : 'wrong'}">
-                      <span class="rname">${esc(r.name)}</span>
-                      <span class="rvalue">${r.value ? esc(r.value) : '—'}</span>
-                      <span class="rpoints">${r.correct ? '+' + r.points : '0'}</span>
-                    </li>`
-                  )
-                  .join('')}
-              </ul>
-              <div class="totals">
-                ${[...m.participants]
-                  .sort((a, b) => b.score - a.score)
-                  .map((p) => `<span class="total"><span>${esc(p.name)}</span><b>${p.score}</b></span>`)
-                  .join('')}
+              <div class="round-body">
+                <h2 class="answer">${esc(m.reveal.answer)}</h2>
+                <ul class="results">
+                  ${m.reveal.results
+                    .map(
+                      (r) => `<li class="result ${r.correct ? 'correct' : 'wrong'}">
+                        <span class="rname">${esc(r.name)}</span>
+                        <span class="rvalue">${r.value ? esc(r.value) : '—'}</span>
+                        <span class="rpoints">${r.correct ? '+' + r.points : '0'}</span>
+                      </li>`
+                    )
+                    .join('')}
+                </ul>
+                <div class="totals">
+                  ${[...m.participants]
+                    .sort((a, b) => b.score - a.score)
+                    .map((p) => `<span class="total"><span>${esc(p.name)}</span><b>${p.score}</b></span>`)
+                    .join('')}
+                </div>
               </div>
             </div>`;
           return;
