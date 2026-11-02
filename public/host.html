@@ -16,7 +16,7 @@
       <section class="join-panel card">
         <div class="label">Код для входа</div>
         <div id="code" class="code">····</div>
-        <img id="qr" class="qr" alt="QR-код для входа" />
+        <img id="qr" class="qr" src="/api/qr.png" alt="QR-код для входа" />
         <div class="hint">Отсканируй QR или открой <span id="join-url">…</span></div>
       </section>
 
@@ -42,7 +42,6 @@
         .then((r) => r.json())
         .then((cfg) => {
           el('code').textContent = cfg.code;
-          el('qr').src = cfg.qr;
           el('join-url').textContent = cfg.joinUrl;
         });
 

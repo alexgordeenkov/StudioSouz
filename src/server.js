@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const PORT = Number(process.env.PORT) || 3000;
 
-const party = new Party({ code: makeCode() });
+const party = new Party({ code: process.env.CODE || 'SOUZ' });
 
 /**
  * @param {string} file
@@ -25,16 +25,6 @@ function contentType(file) {
   if (file.endsWith('.svg')) return 'image/svg+xml';
   if (file.endsWith('.png')) return 'image/png';
   return 'application/octet-stream';
-}
-
-/**
- * @returns {string}
- */
-function makeCode() {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let s = '';
-  for (let i = 0; i < 4; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
-  return s;
 }
 
 /**
@@ -56,9 +46,17 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === '/api/config') {
     const lan = lanAddress();
     const joinUrl = `http://${lan}:${PORT}/?code=${party.code}`;
-    const qr = await QRCode.toDataURL(joinUrl, { margin: 1, width: 360 });
-    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ code: party.code, joinUrl, qr, lan, port: PORT }));
+    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+    res.end(JSON.stringify({ code: party.code, joinUrl, lan, port: PORT }));
+    return;
+  }
+
+  if (url.pathname === '/api/qr.png') {
+    const lan = lanAddress();
+    const joinUrl = `http://${lan}:${PORT}/?code=${party.code}`;
+    const png = await QRCode.toBuffer(joinUrl, { margin: 1, width: 360 });
+    res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
+    res.end(png);
     return;
   }
 
@@ -76,7 +74,7 @@ const server = http.createServer(async (req, res) => {
   const full = path.join(PUBLIC_DIR, filePath);
   try {
     const data = await readFile(full);
-    res.writeHead(200, { 'content-type': contentType(full) });
+    res.writeHead(200, { 'content-type': contentType(full), 'cache-control': 'no-store' });
     res.end(data);
   } catch {
     res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
