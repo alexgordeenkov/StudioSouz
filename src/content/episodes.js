@@ -268,14 +268,19 @@ export const episodes = [
     title: 'Сезон 3 · Выпуск 24',
     rounds: {
       'draw-song': drawSongRounds.slice(),
-      // Реальный клип из «Клипобола» 3-го выпуска (10:54)
-      clipobol: [
+      // «Перепесня» — тот же механик, что «Песня о песне» (выпуск 3, 04:28–10:50)
+      'song-about-song': [
         {
-          mediaTitle: 'RASA Фиолетово клип',
-          muted: true,
-          options: ['Фиолетово', 'Мокрые кроссы', 'Кукла', 'Морячка'],
-          answer: 'Фиолетово',
-          hint: 'Исполнитель — RASA',
+          media: { localFile: 'veter-s-morya-perepesnya' },
+          answer: 'Ветер с моря дул',
+          accept: ['ветер с моря дул', 'ветер с моря дул натали'],
+          hint: 'Оригинал исполняет Натали',
+        },
+        {
+          media: { localFile: 'chuzhie-guby-perepesnya' },
+          answer: 'Чужие губы',
+          accept: ['чужие губы', 'руки вверх чужие губы'],
+          hint: 'Оригинал исполняют Руки Вверх',
         },
       ],
     },

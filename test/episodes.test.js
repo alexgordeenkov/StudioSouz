@@ -148,14 +148,11 @@ test('episode 2 carries all four extracted games', () => {
   }
 });
 
-test('episode 3 carries clipobol and draw-song rounds', () => {
+test('episode 3 carries draw-song and perepesnya rounds', () => {
   const pack = episodes.find((e) => e.id === 's3e24');
   assert.ok(pack);
   assert.ok(pack.rounds['draw-song'].length >= 2);
-  assert.ok(pack.rounds.clipobol.length >= 1);
-  for (const round of pack.rounds.clipobol) {
-    assert.ok(round.options.includes(round.answer));
-  }
+  assert.ok(pack.rounds['song-about-song'].length >= 2);
 });
 
 test('all shipped content rounds provide hints', () => {
