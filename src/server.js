@@ -7,7 +7,8 @@ import { WebSocketServer } from 'ws';
 import QRCode from 'qrcode';
 import { Party } from './party.js';
 import { handleMessage } from './protocol.js';
-import { experiments, experimentList } from './experiments/index.js';
+import { experiments } from './experiments/index.js';
+import { episodes } from './content/episodes.js';
 import { createMediaResolver } from './media.js';
 import { searchYouTube } from './media-youtube.js';
 import { createLocalLister } from './media-local.js';
@@ -20,7 +21,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const listLocal = createLocalLister(AUDIO_DIR);
 const mediaResolver = createMediaResolver({ search: searchYouTube, listLocal });
 
-const party = new Party({ code: process.env.CODE || 'SOUZ', experiments, mediaResolver });
+const party = new Party({ code: process.env.CODE || 'SOUZ', experiments, mediaResolver, episodes });
 
 /**
  * @param {string} file
@@ -75,11 +76,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (url.pathname === '/api/experiments') {
-    const list = experimentList.map((e) => ({
+    const list = party.availableExperiments().map((e) => ({
       id: e.id,
       name: e.name,
       rules: e.rules,
-      rounds: e.rounds.length,
+      rounds: e.rounds,
     }));
     res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
     res.end(JSON.stringify(list));
