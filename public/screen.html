@@ -45,6 +45,7 @@
       let mediaKey = null;
       let ytFrame = null;
       let audioEl = null;
+      let lastRestartToken = 0;
 
       function promptOverlay(m) {
         const prompt = m.round && m.round.data && m.round.data.prompt;
@@ -82,6 +83,22 @@
             )}" ${media.playing ? 'autoplay' : ''} ${media.muted ? 'muted' : ''} controls></audio></div>${promptOverlay(m)}`;
             audioEl = layer.querySelector('audio');
             ytFrame = null;
+          }
+          lastRestartToken = media.restartToken ?? 0;
+        } else if ((media.restartToken ?? 0) !== lastRestartToken) {
+          lastRestartToken = media.restartToken ?? 0;
+          if (media.source === 'youtube' && ytFrame) {
+            ytFrame.contentWindow.postMessage(
+              JSON.stringify({ event: 'command', func: 'seekTo', args: [0, true] }),
+              '*'
+            );
+            ytFrame.contentWindow.postMessage(
+              JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
+              '*'
+            );
+          } else if (media.source === 'local' && audioEl) {
+            audioEl.currentTime = 0;
+            audioEl.play().catch(() => {});
           }
         } else if (media.source === 'youtube' && ytFrame) {
           ytFrame.contentWindow.postMessage(

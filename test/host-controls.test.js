@@ -79,3 +79,24 @@ test('adjustScore rejects an unknown participant', () => {
   const party = makeParty();
   assert.throws(() => party.adjustScore('nope', 1), /не найден/i);
 });
+
+test('restarting media bumps the restart token and keeps it playing', async () => {
+  const resolver = {
+    resolve: async () => ({ source: 'youtube', youtubeId: 'abc123DEF45', title: 'Трек' }),
+  };
+  const party = new Party({ code: 'ABCD', mediaResolver: resolver });
+  await party.playMedia({ title: 'Трек' });
+  party.pauseMedia();
+  const before = party.getState().media.restartToken ?? 0;
+
+  party.restartMedia();
+  const media = party.getState().media;
+  assert.equal(media.playing, true);
+  assert.equal(media.restartToken, before + 1);
+});
+
+test('restartMedia does nothing when there is no media', () => {
+  const party = new Party({ code: 'ABCD' });
+  party.restartMedia();
+  assert.equal(party.getState().media, null);
+});

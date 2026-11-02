@@ -392,6 +392,15 @@ export class Party {
     this.media = null;
   }
 
+  restartMedia() {
+    if (!this.media) return;
+    this.media = {
+      ...this.media,
+      playing: true,
+      restartToken: (this.media.restartToken ?? 0) + 1,
+    };
+  }
+
   /** @param {any} stroke */
   draw(stroke) {
     if (!this.drawerId) throw new Error('Сейчас никто не рисует');

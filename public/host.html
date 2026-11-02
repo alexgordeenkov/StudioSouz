@@ -15,6 +15,16 @@
     <main id="stage" class="stage"></main>
     <canvas id="draw-canvas" class="draw-canvas hidden" width="900" height="620"></canvas>
 
+    <div id="media-bar" class="media-bar hidden">
+      <span id="media-bar-title" class="media-bar-title"></span>
+      <div class="btn-row">
+        <button class="secondary" data-media="pause">Пауза</button>
+        <button class="secondary" data-media="play">Продолжить</button>
+        <button class="secondary" data-media="restart">Перезапустить</button>
+        <button class="secondary" data-media="skip">Пропуск</button>
+      </div>
+    </div>
+
     <script type="module">
       import { el, esc, connect, send, loadConfig, drawStroke, redrawCanvas } from '/client.js';
 
@@ -30,6 +40,7 @@
         state: (m) => {
           state = m;
           render(m);
+          renderMediaBar(m);
         },
         error: (m) => {
           if (m && m.message) console.warn('host error:', m.message);
@@ -68,6 +79,8 @@
             participantId: button.dataset.score,
             delta: Number(button.dataset.delta),
           });
+        } else if (button.dataset.media) {
+          send(ws, { type: 'media-control', action: button.dataset.media });
         } else if (button.id === 'reveal') {
           send(ws, { type: 'reveal' });
         } else if (button.id === 'next-round') {
@@ -132,6 +145,16 @@
         const data = (m.round && m.round.data) || {};
         if (!data.hint || m.hintRevealed) return '';
         return '<button class="secondary" id="reveal-hint">Показать подсказку</button>';
+      }
+
+      function renderMediaBar(m) {
+        const bar = el('media-bar');
+        if (!m.media) {
+          bar.classList.add('hidden');
+          return;
+        }
+        bar.classList.remove('hidden');
+        el('media-bar-title').textContent = `${m.media.title} · ${m.media.playing ? 'играет' : 'пауза'}`;
       }
 
       function render(m) {

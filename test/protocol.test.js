@@ -285,6 +285,21 @@ test('host adjusts a score; non-host cannot', async () => {
   assert.equal(party.getState().participants[0].score, 1);
 });
 
+test('host restarts media; non-host cannot', async () => {
+  const party = makeParty();
+  const host = mkConn('host');
+  const ctrl = mkConn('controller');
+  await handleMessage(party, host, { type: 'media-play', title: 'Песня' }, [host, ctrl]);
+  const before = party.getState().media.restartToken ?? 0;
+
+  const denied = await handleMessage(party, ctrl, { type: 'media-control', action: 'restart' }, [host, ctrl]);
+  assert.ok(denied.some((e) => e.payload.type === 'error'));
+
+  await handleMessage(party, host, { type: 'media-control', action: 'restart' }, [host, ctrl]);
+  assert.equal(party.getState().media.restartToken, before + 1);
+  assert.equal(party.getState().media.playing, true);
+});
+
 test('next-round autoplays the new round media and clears the old one', async () => {
   const mediaExp = {
     id: 'media',

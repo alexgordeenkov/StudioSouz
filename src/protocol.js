@@ -178,6 +178,7 @@ export async function handleMessage(party, conn, message, conns = []) {
       const action = message.action;
       if (action === 'pause') party.pauseMedia();
       else if (action === 'play') party.resumeMedia();
+      else if (action === 'restart') party.restartMedia();
       else if (action === 'skip') party.skipMedia();
       state();
       break;
