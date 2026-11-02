@@ -433,3 +433,343 @@ button.primary:active {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- Stage / phases ---------- */
+.stage {
+  position: relative;
+  z-index: 2;
+}
+
+.deck {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(320px, 1.12fr);
+  gap: clamp(16px, 2vw, 32px);
+  align-items: start;
+}
+
+.center-card {
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.experiment-name {
+  font-size: clamp(30px, 4vw, 64px);
+  color: var(--gold);
+  margin: 12px 0;
+  text-shadow: 0 4px 0 rgba(70, 35, 0, 0.55);
+}
+
+.rules {
+  font-size: clamp(16px, 1.6vw, 24px);
+  line-height: 1.5;
+  color: rgba(255, 244, 226, 0.85);
+  max-width: 850px;
+  margin: 0 auto 16px;
+}
+
+.round {
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.round-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.answers-count {
+  font-family: var(--display);
+  text-transform: uppercase;
+  color: var(--gold);
+  letter-spacing: 0.06em;
+  font-size: clamp(14px, 1.3vw, 22px);
+}
+
+.clues {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(10px, 1.2vw, 22px);
+}
+
+.clues.small {
+  margin: 10px 0 20px;
+}
+
+.clue-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: clamp(18px, 2.4vw, 44px);
+  border-radius: clamp(14px, 1.4vw, 24px);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(255, 244, 226, 0.1), rgba(255, 244, 226, 0.03));
+  font-family: var(--display);
+  font-size: clamp(18px, 2.6vw, 44px);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 1.1;
+  box-shadow: inset 0 1px 0 rgba(255, 244, 226, 0.14);
+}
+
+.clue-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--display);
+  font-size: clamp(28px, 4vw, 72px);
+  color: var(--gold-2);
+}
+
+.answer {
+  font-size: clamp(40px, 7vw, 110px);
+  color: var(--gold);
+  margin: 8px 0 24px;
+  text-shadow: 0 5px 0 rgba(70, 35, 0, 0.5);
+  text-transform: uppercase;
+}
+
+.results {
+  list-style: none;
+  margin: 0 auto;
+  padding: 0;
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.result {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: clamp(15px, 1.4vw, 22px);
+}
+
+.result.correct {
+  background: rgba(120, 200, 90, 0.12);
+  border-color: rgba(150, 220, 110, 0.4);
+}
+
+.result.wrong {
+  background: rgba(214, 96, 74, 0.1);
+  border-color: rgba(214, 96, 74, 0.35);
+}
+
+.rname {
+  font-weight: 800;
+}
+
+.rvalue {
+  color: rgba(255, 244, 226, 0.7);
+}
+
+.rpoints {
+  font-family: var(--display);
+  color: var(--gold);
+  font-weight: 900;
+}
+
+.standings {
+  list-style: none;
+  margin: 16px auto;
+  padding: 0;
+  max-width: 640px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.standings li {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 244, 226, 0.05);
+  font-size: clamp(15px, 1.4vw, 22px);
+}
+
+.standings .pos {
+  font-family: var(--display);
+  color: var(--gold);
+  font-size: 1.2em;
+}
+
+.standings .spoints {
+  font-family: var(--display);
+  color: var(--gold);
+  font-weight: 900;
+}
+
+.btn-row {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.totals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 22px;
+  margin-top: 22px;
+}
+
+.total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(246, 196, 69, 0.08);
+  font-size: clamp(14px, 1.3vw, 20px);
+}
+
+.total b {
+  font-family: var(--display);
+  color: var(--gold);
+}
+
+.secondary {
+  padding: 14px 22px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--cream);
+  font-family: var(--display);
+  text-transform: uppercase;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 244, 226, 0.05);
+  color: var(--cream);
+  cursor: pointer;
+  font-family: var(--body);
+}
+
+.menu-item:hover {
+  background: rgba(246, 196, 69, 0.14);
+}
+
+.mi-name {
+  font-family: var(--display);
+  text-transform: uppercase;
+  font-size: 18px;
+}
+
+.mi-count {
+  color: var(--gold);
+  font-size: 13px;
+}
+
+.experiment-menu {
+  display: flex;
+  flex-direction: column;
+}
+
+/* controller play states */
+.phone-clues .clue-card {
+  font-size: 15px;
+  padding: 12px;
+}
+
+.accepted {
+  font-family: var(--display);
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: 20px;
+  margin-top: 16px;
+}
+
+.answer-small {
+  font-family: var(--display);
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: 30px;
+  margin: 6px 0 16px;
+}
+
+.waiting .big.ok {
+  color: #9be36a;
+}
+
+.waiting .big.no {
+  color: #ffb08c;
+}
+
+@media (max-width: 760px) {
+  .deck {
+    grid-template-columns: 1fr;
+  }
+  .clues {
+    flex-direction: column;
+  }
+  .clue-plus {
+    transform: rotate(90deg);
+  }
+}
+
+/* collage of two portraits */
+.collage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.2vw, 22px);
+}
+
+.collage img {
+  width: auto;
+  max-width: min(52vw, 520px);
+  max-height: 62vh;
+  object-fit: contain;
+  border-radius: 18px;
+  border: 2px solid var(--border);
+  background: rgba(255, 244, 226, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 244, 226, 0.14);
+}
+
+.collage.small img {
+  max-width: min(40vw, 260px);
+  max-height: 36vh;
+  border-radius: 12px;
+}
+
+.phone-collage img {
+  max-width: 60vw;
+  max-height: 34vh;
+}
+
+@media (max-width: 760px) {
+  .collage {
+    flex-direction: column;
+  }
+}
+

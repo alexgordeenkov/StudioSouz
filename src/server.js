@@ -7,12 +7,13 @@ import { WebSocketServer } from 'ws';
 import QRCode from 'qrcode';
 import { Party } from './party.js';
 import { handleMessage } from './protocol.js';
+import { experiments, experimentList } from './experiments/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 const PORT = Number(process.env.PORT) || 3000;
 
-const party = new Party({ code: process.env.CODE || 'SOUZ' });
+const party = new Party({ code: process.env.CODE || 'SOUZ', experiments });
 
 /**
  * @param {string} file
@@ -24,6 +25,9 @@ function contentType(file) {
   if (file.endsWith('.js')) return 'text/javascript; charset=utf-8';
   if (file.endsWith('.svg')) return 'image/svg+xml';
   if (file.endsWith('.png')) return 'image/png';
+  if (file.endsWith('.jpg') || file.endsWith('.jpeg')) return 'image/jpeg';
+  if (file.endsWith('.webp')) return 'image/webp';
+  if (file.endsWith('.gif')) return 'image/gif';
   return 'application/octet-stream';
 }
 
@@ -57,6 +61,18 @@ const server = http.createServer(async (req, res) => {
     const png = await QRCode.toBuffer(joinUrl, { margin: 1, width: 360 });
     res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'no-store' });
     res.end(png);
+    return;
+  }
+
+  if (url.pathname === '/api/experiments') {
+    const list = experimentList.map((e) => ({
+      id: e.id,
+      name: e.name,
+      rules: e.rules,
+      rounds: e.rounds.length,
+    }));
+    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+    res.end(JSON.stringify(list));
     return;
   }
 
@@ -123,7 +139,7 @@ wss.on('connection', (ws, req) => {
   const conn = { role, participantId: null, ws };
   conns.push(conn);
 
-  safeSend(ws, { type: 'lobby', ...party.getState() });
+  safeSend(ws, { type: 'state', ...party.getState() });
 
   ws.on('message', (raw) => {
     /** @type {Record<string, any>} */
@@ -148,7 +164,7 @@ wss.on('connection', (ws, req) => {
     if (idx >= 0) conns.splice(idx, 1);
     if (conn.participantId) {
       party.removeParticipant(conn.participantId);
-      broadcast({ type: 'lobby', ...party.getState() });
+      broadcast({ type: 'state', ...party.getState() });
     }
   });
 });
