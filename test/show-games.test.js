@@ -74,3 +74,27 @@ test('degrade-melody accepts the song title in any case', () => {
   assert.equal(degradeMelody.isCorrect(round, 'Кукла'), false);
   assert.equal(degradeMelody.isCorrect(round, ''), false);
 });
+
+test('retranslation shows the distorted text and hides the answer', () => {
+  const text = 'Я поднимаюсь со дна\nи мне уже не страшно';
+  const round = { text, answer: 'Мокрые кроссы', accept: ['мокрые кроссы'] };
+  assert.equal(retranslation.isCorrect(round, 'Мокрые кроссы'), true);
+  assert.equal(retranslation.isCorrect(round, 'Кукла'), false);
+
+  const pack = {
+    id: 'e2',
+    season: 1,
+    number: 2,
+    rounds: { [retranslation.id]: [round] },
+  };
+  const party = new Party({
+    code: 'ABCD',
+    experiments: { [retranslation.id]: retranslation },
+    episodes: [pack],
+  });
+  party.selectExperiment(retranslation.id);
+  party.startRound();
+  const data = party.getState().round.data;
+  assert.equal(data.text, text);
+  assert.equal('answer' in data, false);
+});
