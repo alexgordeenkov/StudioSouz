@@ -8,12 +8,19 @@ import QRCode from 'qrcode';
 import { Party } from './party.js';
 import { handleMessage } from './protocol.js';
 import { experiments, experimentList } from './experiments/index.js';
+import { createMediaResolver } from './media.js';
+import { searchYouTube } from './media-youtube.js';
+import { createLocalLister } from './media-local.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
+const AUDIO_DIR = path.join(PUBLIC_DIR, 'media', 'audio');
 const PORT = Number(process.env.PORT) || 3000;
 
-const party = new Party({ code: process.env.CODE || 'SOUZ', experiments });
+const listLocal = createLocalLister(AUDIO_DIR);
+const mediaResolver = createMediaResolver({ search: searchYouTube, listLocal });
+
+const party = new Party({ code: process.env.CODE || 'SOUZ', experiments, mediaResolver });
 
 /**
  * @param {string} file
@@ -28,6 +35,9 @@ function contentType(file) {
   if (file.endsWith('.jpg') || file.endsWith('.jpeg')) return 'image/jpeg';
   if (file.endsWith('.webp')) return 'image/webp';
   if (file.endsWith('.gif')) return 'image/gif';
+  if (file.endsWith('.mp3')) return 'audio/mpeg';
+  if (file.endsWith('.m4a')) return 'audio/mp4';
+  if (file.endsWith('.ogg')) return 'audio/ogg';
   return 'application/octet-stream';
 }
 
@@ -71,6 +81,13 @@ const server = http.createServer(async (req, res) => {
       rules: e.rules,
       rounds: e.rounds.length,
     }));
+    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+    res.end(JSON.stringify(list));
+    return;
+  }
+
+  if (url.pathname === '/api/media/local') {
+    const list = await listLocal();
     res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
     res.end(JSON.stringify(list));
     return;
@@ -141,7 +158,7 @@ wss.on('connection', (ws, req) => {
 
   safeSend(ws, { type: 'state', ...party.getState() });
 
-  ws.on('message', (raw) => {
+  ws.on('message', async (raw) => {
     /** @type {Record<string, any>} */
     let msg;
     try {
@@ -149,7 +166,7 @@ wss.on('connection', (ws, req) => {
     } catch {
       return;
     }
-    const effects = handleMessage(party, conn, msg, conns);
+    const effects = await handleMessage(party, conn, msg, conns);
     for (const eff of effects) {
       if (eff.kind === 'broadcast') {
         broadcast(eff.payload);

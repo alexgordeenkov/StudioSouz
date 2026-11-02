@@ -49,9 +49,9 @@ function publicRound(round) {
  */
 export class Party {
   /**
-   * @param {{ code: string, experiments?: Record<string, Experiment<any>> }} opts
+   * @param {{ code: string, experiments?: Record<string, Experiment<any>>, mediaResolver?: any }} opts
    */
-  constructor({ code, experiments = {} }) {
+  constructor({ code, experiments = {}, mediaResolver = null }) {
     /** @type {string} */
     this.code = code;
     /** @type {Mode} */
@@ -74,6 +74,10 @@ export class Party {
     this.answers = new Map();
     /** @type {{ answer: string, results: RoundResult[], firstCorrectId: string | null } | null} */
     this.reveal = null;
+    /** @type {any} */
+    this.mediaResolver = mediaResolver;
+    /** @type {any} */
+    this.media = null;
   }
 
   /**
@@ -219,6 +223,28 @@ export class Party {
     this.reveal = null;
   }
 
+  /**
+   * @param {{ title?: string, youtubeId?: string, localFile?: string }} request
+   */
+  async playMedia(request) {
+    if (!this.mediaResolver) throw new Error('Медиа недоступно');
+    const media = await this.mediaResolver.resolve(request);
+    this.media = { ...media, playing: true };
+    return this.media;
+  }
+
+  pauseMedia() {
+    if (this.media) this.media = { ...this.media, playing: false };
+  }
+
+  resumeMedia() {
+    if (this.media) this.media = { ...this.media, playing: true };
+  }
+
+  skipMedia() {
+    this.media = null;
+  }
+
   getState() {
     const exp = this.experiment;
     const round =
@@ -243,6 +269,7 @@ export class Party {
       reveal: this.reveal,
       answersCount: this.answers.size,
       speedBonus: this.speedBonus,
+      media: this.media,
     };
   }
 }

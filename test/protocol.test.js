@@ -21,6 +21,14 @@ const testExp = {
   },
 };
 
+const fakeMedia = {
+  resolve: async (/** @type {{ title?: string }} */ req) => ({
+    source: 'local',
+    localUrl: '/media/audio/test.mp3',
+    title: req.title || 'test',
+  }),
+};
+
 /**
  * @param {'screen' | 'host' | 'controller'} role
  * @param {string | null} [participantId]
@@ -30,17 +38,17 @@ function mkConn(role, participantId = null) {
 }
 
 function makeParty() {
-  return new Party({ code: 'ABCD', experiments: { test: testExp } });
+  return new Party({ code: 'ABCD', experiments: { test: testExp }, mediaResolver: fakeMedia });
 }
 
 function stateOf(effects) {
   return effects.find((e) => e.payload.type === 'state');
 }
 
-test('controller joins and state is broadcast', () => {
+test('controller joins and state is broadcast', async () => {
   const party = makeParty();
   const c = mkConn('controller');
-  const effects = handleMessage(party, c, { type: 'join', name: 'Маша', code: 'ABCD' }, [c]);
+  const effects = await handleMessage(party, c, { type: 'join', name: 'Маша', code: 'ABCD' }, [c]);
   assert.equal(c.participantId, '1');
   assert.equal(party.getState().participants.length, 1);
   const s = stateOf(effects);
@@ -49,55 +57,55 @@ test('controller joins and state is broadcast', () => {
   assert.equal(s.payload.participants[0].name, 'Маша');
 });
 
-test('join with wrong code is rejected', () => {
+test('join with wrong code is rejected', async () => {
   const party = makeParty();
   const c = mkConn('controller');
-  const effects = handleMessage(party, c, { type: 'join', name: 'Маша', code: 'ZZZZ' }, [c]);
+  const effects = await handleMessage(party, c, { type: 'join', name: 'Маша', code: 'ZZZZ' }, [c]);
   assert.equal(party.getState().participants.length, 0);
   assert.ok(effects.some((e) => e.payload.type === 'error'));
 });
 
-test('join with empty name is rejected', () => {
+test('join with empty name is rejected', async () => {
   const party = makeParty();
   const c = mkConn('controller');
-  const effects = handleMessage(party, c, { type: 'join', name: '   ', code: 'ABCD' }, [c]);
+  const effects = await handleMessage(party, c, { type: 'join', name: '   ', code: 'ABCD' }, [c]);
   assert.equal(party.getState().participants.length, 0);
   assert.ok(effects.some((e) => e.payload.type === 'error'));
 });
 
-test('non-controller cannot join', () => {
+test('non-controller cannot join', async () => {
   const party = makeParty();
   const c = mkConn('screen');
-  const effects = handleMessage(party, c, { type: 'join', name: 'Маша', code: 'ABCD' }, [c]);
+  const effects = await handleMessage(party, c, { type: 'join', name: 'Маша', code: 'ABCD' }, [c]);
   assert.equal(party.getState().participants.length, 0);
   assert.ok(effects.some((e) => e.payload.type === 'error'));
 });
 
-test('host kicks a participant, who is notified and removed', () => {
+test('host kicks a participant, who is notified and removed', async () => {
   const party = makeParty();
   const ctrl = mkConn('controller');
-  handleMessage(party, ctrl, { type: 'join', name: 'Маша', code: 'ABCD' }, [ctrl]);
+  await handleMessage(party, ctrl, { type: 'join', name: 'Маша', code: 'ABCD' }, [ctrl]);
   const host = mkConn('host');
-  const effects = handleMessage(party, host, { type: 'kick', participantId: '1' }, [ctrl, host]);
+  const effects = await handleMessage(party, host, { type: 'kick', participantId: '1' }, [ctrl, host]);
   assert.equal(party.getState().participants.length, 0);
   assert.equal(ctrl.participantId, null);
   assert.ok(effects.some((e) => e.target === ctrl && e.payload.type === 'kicked'));
 });
 
-test('host changes mode and state is broadcast', () => {
+test('host changes mode and state is broadcast', async () => {
   const party = makeParty();
   const host = mkConn('host');
-  const effects = handleMessage(party, host, { type: 'set-mode', mode: 'teams' }, [host]);
+  const effects = await handleMessage(party, host, { type: 'set-mode', mode: 'teams' }, [host]);
   assert.equal(party.getState().mode, 'teams');
   assert.equal(stateOf(effects)?.payload.mode, 'teams');
 });
 
-test('non-host cannot kick, change mode, or start an experiment', () => {
+test('non-host cannot kick, change mode, or start an experiment', async () => {
   const party = makeParty();
   const ctrl = mkConn('controller', '1');
-  const e1 = handleMessage(party, ctrl, { type: 'kick', participantId: '1' }, [ctrl]);
-  const e2 = handleMessage(party, ctrl, { type: 'set-mode', mode: 'teams' }, [ctrl]);
-  const e3 = handleMessage(party, ctrl, { type: 'start-experiment', experimentId: 'test' }, [ctrl]);
+  const e1 = await handleMessage(party, ctrl, { type: 'kick', participantId: '1' }, [ctrl]);
+  const e2 = await handleMessage(party, ctrl, { type: 'set-mode', mode: 'teams' }, [ctrl]);
+  const e3 = await handleMessage(party, ctrl, { type: 'start-experiment', experimentId: 'test' }, [ctrl]);
   assert.ok(e1.some((e) => e.payload.type === 'error'));
   assert.ok(e2.some((e) => e.payload.type === 'error'));
   assert.ok(e3.some((e) => e.payload.type === 'error'));
@@ -105,25 +113,25 @@ test('non-host cannot kick, change mode, or start an experiment', () => {
   assert.equal(party.getState().phase, 'lobby');
 });
 
-test('host runs an experiment end to end and scores are awarded', () => {
+test('host runs an experiment end to end and scores are awarded', async () => {
   const party = makeParty();
   const host = mkConn('host');
   const a = mkConn('controller');
   const b = mkConn('controller');
-  handleMessage(party, a, { type: 'join', name: 'A', code: 'ABCD' }, [host, a, b]);
-  handleMessage(party, b, { type: 'join', name: 'B', code: 'ABCD' }, [host, a, b]);
+  await handleMessage(party, a, { type: 'join', name: 'A', code: 'ABCD' }, [host, a, b]);
+  await handleMessage(party, b, { type: 'join', name: 'B', code: 'ABCD' }, [host, a, b]);
 
-  handleMessage(party, host, { type: 'start-experiment', experimentId: 'test' }, [host, a, b]);
+  await handleMessage(party, host, { type: 'start-experiment', experimentId: 'test' }, [host, a, b]);
   assert.equal(party.getState().phase, 'experiment');
 
-  handleMessage(party, host, { type: 'start-round' }, [host, a, b]);
+  await handleMessage(party, host, { type: 'start-round' }, [host, a, b]);
   assert.equal(party.getState().phase, 'round');
 
-  const accepted = handleMessage(party, a, { type: 'submit-answer', value: 'Уилл Митяев' }, [host, a, b]);
+  const accepted = await handleMessage(party, a, { type: 'submit-answer', value: 'Уилл Митяев' }, [host, a, b]);
   assert.ok(accepted.some((e) => e.payload.type === 'answer-accepted'));
   assert.equal(party.getState().answersCount, 1);
 
-  handleMessage(party, host, { type: 'reveal' }, [host, a, b]);
+  await handleMessage(party, host, { type: 'reveal' }, [host, a, b]);
   const state = party.getState();
   assert.equal(state.phase, 'reveal');
   assert.equal(state.reveal?.answer, 'Уилл Митяев');
@@ -133,10 +141,31 @@ test('host runs an experiment end to end and scores are awarded', () => {
   assert.equal(scoreB, 0);
 });
 
-test('controller cannot submit an answer outside a round', () => {
+test('controller cannot submit an answer outside a round', async () => {
   const party = makeParty();
   const c = mkConn('controller');
-  handleMessage(party, c, { type: 'join', name: 'A', code: 'ABCD' }, [c]);
-  const effects = handleMessage(party, c, { type: 'submit-answer', value: 'Уилл Митяев' }, [c]);
+  await handleMessage(party, c, { type: 'join', name: 'A', code: 'ABCD' }, [c]);
+  const effects = await handleMessage(party, c, { type: 'submit-answer', value: 'Уилл Митяев' }, [c]);
+  assert.ok(effects.some((e) => e.payload.type === 'error'));
+});
+
+test('host plays, pauses and skips media', async () => {
+  const party = makeParty();
+  const host = mkConn('host');
+  const played = await handleMessage(party, host, { type: 'media-play', title: 'Песня' }, [host]);
+  assert.equal(stateOf(played)?.payload.media.source, 'local');
+  assert.equal(party.getState().media.playing, true);
+
+  await handleMessage(party, host, { type: 'media-control', action: 'pause' }, [host]);
+  assert.equal(party.getState().media.playing, false);
+
+  await handleMessage(party, host, { type: 'media-control', action: 'skip' }, [host]);
+  assert.equal(party.getState().media, null);
+});
+
+test('non-host cannot control media', async () => {
+  const party = makeParty();
+  const ctrl = mkConn('controller', '1');
+  const effects = await handleMessage(party, ctrl, { type: 'media-play', title: 'Песня' }, [ctrl]);
   assert.ok(effects.some((e) => e.payload.type === 'error'));
 });
