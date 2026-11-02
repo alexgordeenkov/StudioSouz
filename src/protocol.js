@@ -147,6 +147,17 @@ export async function handleMessage(party, conn, message, conns = []) {
       break;
     }
 
+    case 'adjust-score': {
+      if (!requireHost()) break;
+      try {
+        party.adjustScore(String(message.participantId ?? ''), Number(message.delta));
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
     case 'media-play': {
       if (!requireHost()) break;
       try {

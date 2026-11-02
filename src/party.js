@@ -147,6 +147,19 @@ export class Party {
   }
 
   /**
+   * Ручное начисление баллов ведущим. Счёт не опускается ниже нуля.
+   * @param {string} participantId
+   * @param {number} delta
+   */
+  adjustScore(participantId, delta) {
+    const p = this.participants.get(String(participantId));
+    if (!p) throw new Error('Участник не найден');
+    const d = Number(delta);
+    if (!Number.isFinite(d)) throw new Error('Неверное изменение счёта');
+    p.score = Math.max(0, p.score + d);
+  }
+
+  /**
    * @param {Mode} mode
    */
   setMode(mode) {

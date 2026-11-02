@@ -266,6 +266,25 @@ test('host reveals a hint and everyone sees it; non-host cannot', async () => {
   assert.equal(hostState.payload.round.data.answer, 'A');
 });
 
+test('host adjusts a score; non-host cannot', async () => {
+  const party = makeParty();
+  const host = mkConn('host');
+  const a = mkConn('controller');
+  await handleMessage(party, a, { type: 'join', name: 'A', code: 'ABCD' }, [host, a]);
+  const id = a.participantId;
+
+  const denied = await handleMessage(
+    party,
+    a,
+    { type: 'adjust-score', participantId: id, delta: 1 },
+    [host, a]
+  );
+  assert.ok(denied.some((e) => e.payload.type === 'error'));
+
+  await handleMessage(party, host, { type: 'adjust-score', participantId: id, delta: 1 }, [host, a]);
+  assert.equal(party.getState().participants[0].score, 1);
+});
+
 test('next-round autoplays the new round media and clears the old one', async () => {
   const mediaExp = {
     id: 'media',

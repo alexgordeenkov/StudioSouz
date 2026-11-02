@@ -62,6 +62,12 @@
           send(ws, { type: 'start-round' });
         } else if (button.id === 'reveal-hint') {
           send(ws, { type: 'reveal-hint' });
+        } else if (button.dataset.score) {
+          send(ws, {
+            type: 'adjust-score',
+            participantId: button.dataset.score,
+            delta: Number(button.dataset.delta),
+          });
         } else if (button.id === 'reveal') {
           send(ws, { type: 'reveal' });
         } else if (button.id === 'next-round') {
@@ -245,7 +251,15 @@
               <div class="totals">
                 ${[...m.participants]
                   .sort((a, b) => b.score - a.score)
-                  .map((p) => `<span class="total"><span>${esc(p.name)}</span><b>${p.score}</b></span>`)
+                  .map(
+                    (p) => `<span class="total">
+                      <span>${esc(p.name)}</span><b>${p.score}</b>
+                      <span class="score-adj">
+                        <button class="score-btn" data-score="${esc(p.id)}" data-delta="-1">−1</button>
+                        <button class="score-btn" data-score="${esc(p.id)}" data-delta="1">+1</button>
+                      </span>
+                    </span>`
+                  )
                   .join('')}
               </div>
               <div class="btn-row">

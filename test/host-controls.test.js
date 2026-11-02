@@ -61,3 +61,21 @@ test('hint reveal resets on the next round', () => {
   party.nextRound();
   assert.equal(party.getState().hintRevealed, false);
 });
+
+test('host adjusts a score by ±1 and it never goes below zero', () => {
+  const party = makeParty();
+  const a = party.addParticipant('A');
+  assert.equal(a.score, 0);
+
+  party.adjustScore(a.id, 1);
+  assert.equal(party.getState().participants.find((p) => p.id === a.id).score, 1);
+
+  party.adjustScore(a.id, -1);
+  party.adjustScore(a.id, -1);
+  assert.equal(party.getState().participants.find((p) => p.id === a.id).score, 0);
+});
+
+test('adjustScore rejects an unknown participant', () => {
+  const party = makeParty();
+  assert.throws(() => party.adjustScore('nope', 1), /не найден/i);
+});
