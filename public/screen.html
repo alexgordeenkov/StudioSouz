@@ -56,7 +56,7 @@
         const layer = el('media');
         const media = m.media;
         if (!media) {
-          layer.classList.remove('active');
+          layer.classList.remove('active', 'audio-only');
           if (mediaKey) {
             layer.innerHTML = '';
             mediaKey = null;
@@ -66,6 +66,7 @@
           return;
         }
         layer.classList.add('active');
+        layer.classList.toggle('audio-only', media.source === 'local');
         const key = media.source + ':' + (media.youtubeId || media.localUrl);
         if (key !== mediaKey) {
           mediaKey = key;
@@ -78,9 +79,15 @@
             ytFrame = layer.querySelector('iframe');
             audioEl = null;
           } else {
-            layer.innerHTML = `<div class="media-frame audio-frame"><audio src="${esc(
-              media.localUrl
-            )}" ${media.playing ? 'autoplay' : ''} ${media.muted ? 'muted' : ''} controls></audio></div>${promptOverlay(m)}`;
+            layer.innerHTML = `
+              <div class="audio-now">
+                <span class="audio-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                <span class="audio-now-text">
+                  <b>Звучит трек</b>
+                  <span>Слушайте и угадывайте</span>
+                </span>
+                <audio src="${esc(media.localUrl)}" ${media.playing ? 'autoplay' : ''} ${media.muted ? 'muted' : ''}></audio>
+              </div>`;
             audioEl = layer.querySelector('audio');
             ytFrame = null;
           }
