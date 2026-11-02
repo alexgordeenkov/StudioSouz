@@ -213,6 +213,7 @@
                 <span class="pill">Раунд ${m.round.index + 1} / ${m.round.total}</span>
                 <span class="answers-count">Ответов: ${m.answersCount} из ${m.participants.length}</span>
               </div>
+              ${m.round.data.prompt ? `<h2 class="round-prompt">${esc(m.round.data.prompt)}</h2>` : ''}
               <div class="collage small">
                 ${m.round.data.image ? `<img src="${esc(m.round.data.image)}" alt="Коллаж" />` : '<div class="hint">Задание на общем экране</div>'}
               </div>

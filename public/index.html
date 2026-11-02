@@ -186,7 +186,8 @@
                    <label>Твой ответ<input id="answer" maxlength="60" autocomplete="off" placeholder="Название песни" /></label>
                    <button class="primary" type="submit">Ответить</button>
                  </form>`;
-          stage.innerHTML = `<div class="round-phone">${
+          const prompt = m.round.data.prompt ? `<div class="round-prompt">${esc(m.round.data.prompt)}</div>` : '';
+          stage.innerHTML = `<div class="round-phone">${prompt}${
             isDrawing ? '<div class="hint">Угадайте песню по рисунку</div>' : picture
           }${answerArea}</div>`;
           if (!submitted && !options) {
