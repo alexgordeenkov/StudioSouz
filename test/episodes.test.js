@@ -140,3 +140,13 @@ test('episode 2 carries the retranslation rounds', () => {
     assert.ok(round.answer);
   }
 });
+
+test('episode 3 carries clipobol and draw-song rounds', () => {
+  const pack = episodes.find((e) => e.id === 's3e24');
+  assert.ok(pack);
+  assert.ok(pack.rounds['draw-song'].length >= 2);
+  assert.ok(pack.rounds.clipobol.length >= 1);
+  for (const round of pack.rounds.clipobol) {
+    assert.ok(round.options.includes(round.answer));
+  }
+});

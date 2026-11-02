@@ -172,6 +172,14 @@ export const episodes = [
     title: 'Сезон 3 · Выпуск 24',
     rounds: {
       'draw-song': drawSong.rounds.slice(),
+      // Реальный клип из «Клипобола» 3-го выпуска (10:54)
+      clipobol: [
+        {
+          mediaTitle: 'RASA Фиолетово клип',
+          options: ['Фиолетово', 'Мокрые кроссы', 'Кукла', 'Морячка'],
+          answer: 'Фиолетово',
+        },
+      ],
     },
   },
 ];
