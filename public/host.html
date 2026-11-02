@@ -37,20 +37,11 @@
 
       let joinUrl = '';
       let state = null;
-      /** @type {Array<{ id: string, name: string, rounds: number }>} */
-      let experiments = [];
 
       loadConfig().then((cfg) => {
         joinUrl = cfg.joinUrl;
         if (state) render(state);
       });
-
-      fetch('/api/experiments')
-        .then((r) => r.json())
-        .then((list) => {
-          experiments = list;
-          if (state) render(state);
-        });
 
       const ws = connect('host', {
         state: (m) => {
@@ -118,6 +109,10 @@
           send(ws, { type: 'kick', participantId: button.dataset.kick });
         } else if (button.dataset.exp) {
           send(ws, { type: 'start-experiment', experimentId: button.dataset.exp });
+        } else if (button.dataset.episode) {
+          send(ws, { type: 'select-episode', episodeId: button.dataset.episode });
+        } else if (button.dataset.drawer) {
+          send(ws, { type: 'set-drawer', participantId: button.dataset.drawer });
         } else if (button.id === 'start-round') {
           send(ws, { type: 'start-round' });
         } else if (button.id === 'reveal') {
@@ -133,6 +128,42 @@
 
       const modeButton = (mode, label, active) =>
         `<button data-mode="${mode}" class="${active ? 'active' : ''}">${label}</button>`;
+
+      function episodePicker(m) {
+        const seasons = [...new Set(m.episodes.map((e) => e.season))].sort((a, b) => a - b);
+        return seasons
+          .map(
+            (season) => `
+              <div class="season-block">
+                <div class="season-title">Сезон ${season}</div>
+                <div class="episode-list">
+                  ${m.episodes
+                    .filter((e) => e.season === season)
+                    .map(
+                      (e) =>
+                        `<button data-episode="${esc(e.id)}" class="${m.episode && m.episode.id === e.id ? 'active' : ''}">Выпуск ${e.number}</button>`
+                    )
+                    .join('')}
+                </div>
+              </div>`
+          )
+          .join('');
+      }
+
+      function drawerPicker(m) {
+        return `
+          <div class="drawer-picker">
+            <div class="label">Кто рисует?</div>
+            <div class="btn-row wrap">
+              ${m.participants
+                .map(
+                  (p) =>
+                    `<button data-drawer="${esc(p.id)}" class="${m.pendingDrawerId === p.id ? 'active' : ''}">${esc(p.name)}</button>`
+                )
+                .join('')}
+            </div>
+          </div>`;
+      }
 
       function render(m) {
         const stage = el('stage');
@@ -165,8 +196,9 @@
                     .join('')}
                 </ul>
                 ${m.participants.length ? '' : '<div class="empty">Пока никого. Отсканируй QR с телефона.</div>'}
+                <div class="episode-picker">${episodePicker(m)}</div>
                 <div class="experiment-menu">
-                  ${experiments
+                  ${m.availableExperiments
                     .map(
                       (e) => `<button class="menu-item" data-exp="${esc(e.id)}">
                         <span class="mi-name">${esc(e.name)}</span>
@@ -181,11 +213,13 @@
         }
 
         if (m.phase === 'experiment') {
+          const isDrawing = m.experiment && m.experiment.kind === 'drawing';
           stage.innerHTML = `
             <div class="card center-card">
               <div class="label">Эксперимент</div>
               <h2 class="experiment-name">${esc(m.experiment.name)}</h2>
               <p class="rules">${esc(m.experiment.rules)}</p>
+              ${isDrawing ? drawerPicker(m) : ''}
               <div class="btn-row">
                 <button class="primary" id="start-round">Начать раунд</button>
                 <button class="secondary" id="back-lobby">Отмена</button>

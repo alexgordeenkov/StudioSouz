@@ -226,3 +226,17 @@ test('a disconnected participant can rejoin with the same id', async () => {
   assert.ok(effects.some((e) => e.payload.type === 'joined'));
   assert.equal(party.getState().participants[0].connected, true);
 });
+
+test('host selects an episode and the state carries available experiments', async () => {
+  const party = new Party({
+    code: 'ABCD',
+    experiments: { test: testExp },
+    episodes: [{ id: 'e1', season: 1, number: 1, title: 'Выпуск 1', rounds: { test: testExp.rounds } }],
+  });
+  const host = mkConn('host');
+  const effects = await handleMessage(party, host, { type: 'select-episode', episodeId: 'e1' }, [host]);
+  assert.equal(party.getState().episode?.id, 'e1');
+  const s = stateOf(effects);
+  assert.ok(s);
+  assert.equal(s.payload.availableExperiments[0].id, 'test');
+});

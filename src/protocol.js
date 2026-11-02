@@ -114,6 +114,28 @@ export async function handleMessage(party, conn, message, conns = []) {
       break;
     }
 
+    case 'select-episode': {
+      if (!requireHost()) break;
+      try {
+        party.setEpisode(String(message.episodeId ?? ''));
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
+    case 'set-drawer': {
+      if (!requireHost()) break;
+      try {
+        party.setPendingDrawer(message.participantId ?? null);
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
     case 'media-play': {
       if (!requireHost()) break;
       try {

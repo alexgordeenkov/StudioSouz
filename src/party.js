@@ -26,6 +26,15 @@
  */
 
 /**
+ * @typedef {Object} EpisodePack
+ * @property {string} id
+ * @property {number} season
+ * @property {number} number
+ * @property {string} [title]
+ * @property {Record<string, any[]>} rounds
+ */
+
+/**
  * @typedef {Object} RoundResult
  * @property {string} participantId
  * @property {string} name
@@ -50,9 +59,14 @@ function publicRound(round) {
  */
 export class Party {
   /**
-   * @param {{ code: string, experiments?: Record<string, Experiment<any>>, mediaResolver?: any }} opts
+   * @param {{
+   *   code: string,
+   *   experiments?: Record<string, Experiment<any>>,
+   *   mediaResolver?: any,
+   *   episodes?: EpisodePack[],
+   * }} opts
    */
-  constructor({ code, experiments = {}, mediaResolver = null }) {
+  constructor({ code, experiments = {}, mediaResolver = null, episodes = [] }) {
     /** @type {string} */
     this.code = code;
     /** @type {Mode} */
@@ -63,6 +77,12 @@ export class Party {
     this._nextId = 1;
     /** @type {Record<string, Experiment<any>>} */
     this.experiments = experiments;
+    /** @type {EpisodePack[]} */
+    this.episodes = episodes;
+    /** @type {EpisodePack | null} */
+    this.episode = episodes[0] ?? null;
+    /** @type {string | null} */
+    this.pendingDrawerId = null;
     /** @type {boolean} */
     this.speedBonus = true;
     /** @type {Phase} */
@@ -148,16 +168,72 @@ export class Party {
   }
 
   /**
+   * Переключает выпуск. Доступно только в лобби и сбрасывает текущую игру.
+   * @param {string} id
+   */
+  setEpisode(id) {
+    if (this.phase !== 'lobby') throw new Error('Выпуск меняется только в лобби');
+    const pack = this.episodes.find((e) => e.id === id);
+    if (!pack) throw new Error('Выпуск не найден');
+    this.episode = pack;
+    this.experiment = null;
+    this.roundIndex = -1;
+    this.answers.clear();
+    this.reveal = null;
+    this.pendingDrawerId = null;
+  }
+
+  /**
+   * Игры, для которых в выбранном выпуске есть раунды.
+   * @returns {Array<{ id: string, name: string, rules: string, kind: string, rounds: number }>}
+   */
+  availableExperiments() {
+    /** @type {Array<{ id: string, name: string, rules: string, kind: string, rounds: number }>} */
+    const list = [];
+    for (const exp of Object.values(this.experiments)) {
+      const rounds = this.episode ? this.episode.rounds[exp.id] : exp.rounds;
+      if (!rounds || rounds.length === 0) continue;
+      list.push({
+        id: exp.id,
+        name: exp.name,
+        rules: exp.rules,
+        kind: exp.kind ?? 'quiz',
+        rounds: rounds.length,
+      });
+    }
+    return list;
+  }
+
+  /**
    * @param {string} experimentId
    */
   selectExperiment(experimentId) {
-    const exp = this.experiments[experimentId];
-    if (!exp) throw new Error('Эксперимент не найден');
-    this.experiment = exp;
+    const base = this.experiments[experimentId];
+    if (!base) throw new Error('Эксперимент не найден');
+    const rounds = this.episode ? this.episode.rounds[experimentId] : base.rounds;
+    if (!rounds || rounds.length === 0) throw new Error('В этом выпуске нет такой игры');
+    this.experiment = rounds === base.rounds ? base : { ...base, rounds };
     this.phase = 'experiment';
     this.roundIndex = -1;
     this.answers.clear();
     this.reveal = null;
+    this.pendingDrawerId = null;
+  }
+
+  /**
+   * Выбор рисующего ведущим перед раундом.
+   * @param {string | null} participantId
+   */
+  setPendingDrawer(participantId) {
+    if (this.phase !== 'experiment' || !this.experiment) throw new Error('Сейчас нельзя выбрать рисующего');
+    if (this.experiment.kind !== 'drawing') throw new Error('В этой игре никто не рисует');
+    if (participantId == null) {
+      this.pendingDrawerId = null;
+      return;
+    }
+    const id = String(participantId);
+    if (!this.participants.has(id)) throw new Error('Участник не найден');
+    this.pendingDrawerId = id;
   }
 
   startRound() {
@@ -171,7 +247,12 @@ export class Party {
     this.drawing = [];
     if (this.experiment.kind === 'drawing') {
       const ids = [...this.participants.keys()];
-      if (ids.length) this.drawerId = ids[this.roundIndex % ids.length];
+      if (this.pendingDrawerId && this.participants.has(this.pendingDrawerId)) {
+        this.drawerId = this.pendingDrawerId;
+      } else if (ids.length) {
+        this.drawerId = ids[this.roundIndex % ids.length];
+      }
+      this.pendingDrawerId = null;
     }
   }
 
@@ -238,6 +319,14 @@ export class Party {
     if (this.roundIndex + 1 >= this.experiment.rounds.length) {
       this.phase = 'results';
       return { finished: true };
+    }
+    // В рисовании возвращаемся на экран подготовки, чтобы ведущий выбрал рисующего.
+    if (this.experiment.kind === 'drawing') {
+      this.phase = 'experiment';
+      this.answers.clear();
+      this.reveal = null;
+      this.pendingDrawerId = null;
+      return { finished: false };
     }
     this.startRound();
     return { finished: false };
@@ -328,7 +417,23 @@ export class Party {
       speedBonus: this.speedBonus,
       media: this.media,
       drawerId: this.drawerId,
+      pendingDrawerId: this.pendingDrawerId,
       drawing: this.drawing,
+      episode: this.episode
+        ? {
+            id: this.episode.id,
+            season: this.episode.season,
+            number: this.episode.number,
+            title: this.episode.title ?? `Сезон ${this.episode.season} · Выпуск ${this.episode.number}`,
+          }
+        : null,
+      episodes: this.episodes.map((e) => ({
+        id: e.id,
+        season: e.season,
+        number: e.number,
+        title: e.title ?? `Сезон ${e.season} · Выпуск ${e.number}`,
+      })),
+      availableExperiments: this.availableExperiments(),
       winner:
         this.phase === 'winner'
           ? (() => {
