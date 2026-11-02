@@ -151,7 +151,7 @@ test('episode 3 carries clipobol and draw-song rounds', () => {
   }
 });
 
-test('every episode round carries a hint', () => {
+test('all shipped content rounds provide hints', () => {
   for (const pack of episodes) {
     for (const [exp, rounds] of Object.entries(pack.rounds)) {
       for (const round of rounds) {

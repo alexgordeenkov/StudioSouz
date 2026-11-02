@@ -161,6 +161,7 @@
                   <span class="pill">Раунд ${m.round.index + 1} / ${m.round.total}</span>
                   <span class="answers-count">Ответов: ${m.answersCount}</span>
                 </div>
+                ${m.round.data.hint ? `<div class="hint-banner">Подсказка: ${esc(m.round.data.hint)}</div>` : ''}
                 <div class="hint">Рисует: ${esc(drawer ? drawer.name : '—')}. Угадывайте название песни на пультах.</div>
               </div>`;
             redrawCanvas(drawCanvas, m.drawing);

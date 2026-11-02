@@ -152,10 +152,11 @@ export class Party {
    * @param {number} delta
    */
   adjustScore(participantId, delta) {
+    if (this.phase !== 'reveal') throw new Error('Баллы вручную — только на итогах раунда');
     const p = this.participants.get(String(participantId));
     if (!p) throw new Error('Участник не найден');
     const d = Number(delta);
-    if (!Number.isFinite(d)) throw new Error('Неверное изменение счёта');
+    if (d !== 1 && d !== -1) throw new Error('Можно только +1 или −1');
     p.score = Math.max(0, p.score + d);
   }
 
@@ -364,6 +365,7 @@ export class Party {
     this.answers.clear();
     this.reveal = null;
     this.hintRevealed = false;
+    this.media = null;
   }
 
   finishParty() {

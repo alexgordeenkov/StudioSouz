@@ -272,6 +272,9 @@ test('host adjusts a score; non-host cannot', async () => {
   const a = mkConn('controller');
   await handleMessage(party, a, { type: 'join', name: 'A', code: 'ABCD' }, [host, a]);
   const id = a.participantId;
+  await handleMessage(party, host, { type: 'start-experiment', experimentId: 'test' }, [host, a]);
+  await handleMessage(party, host, { type: 'start-round' }, [host, a]);
+  await handleMessage(party, host, { type: 'reveal' }, [host, a]);
 
   const denied = await handleMessage(
     party,

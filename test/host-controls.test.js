@@ -65,6 +65,9 @@ test('hint reveal resets on the next round', () => {
 test('host adjusts a score by ±1 and it never goes below zero', () => {
   const party = makeParty();
   const a = party.addParticipant('A');
+  party.selectExperiment('quiz');
+  party.startRound();
+  party.revealRound();
   assert.equal(a.score, 0);
 
   party.adjustScore(a.id, 1);
@@ -77,7 +80,20 @@ test('host adjusts a score by ±1 and it never goes below zero', () => {
 
 test('adjustScore rejects an unknown participant', () => {
   const party = makeParty();
+  party.selectExperiment('quiz');
+  party.startRound();
+  party.revealRound();
   assert.throws(() => party.adjustScore('nope', 1), /не найден/i);
+});
+
+test('adjustScore works only on reveal and only ±1', () => {
+  const party = makeParty();
+  const a = party.addParticipant('A');
+  party.selectExperiment('quiz');
+  party.startRound();
+  assert.throws(() => party.adjustScore(a.id, 1), /итогах раунда/i);
+  party.revealRound();
+  assert.throws(() => party.adjustScore(a.id, 5), /\+1 или −1/);
 });
 
 test('restarting media bumps the restart token and keeps it playing', async () => {

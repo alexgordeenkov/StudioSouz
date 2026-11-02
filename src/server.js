@@ -182,7 +182,9 @@ wss.on('connection', (ws, req) => {
     if (idx >= 0) conns.splice(idx, 1);
     if (conn.participantId) {
       party.markDisconnected(conn.participantId);
-      broadcast({ type: 'state', ...party.getState() });
+      for (const c of conns) {
+        safeSend(c.ws, { type: 'state', ...party.getState({ forHost: c.role === 'host' }) });
+      }
     }
   });
 });

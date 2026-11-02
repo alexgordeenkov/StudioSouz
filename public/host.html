@@ -149,7 +149,7 @@
 
       function renderMediaBar(m) {
         const bar = el('media-bar');
-        if (!m.media) {
+        if (!m.media || m.phase !== 'round') {
           bar.classList.add('hidden');
           return;
         }
@@ -272,8 +272,7 @@
                   .join('')}
               </ul>
               <div class="totals">
-                ${[...m.participants]
-                  .sort((a, b) => b.score - a.score)
+                ${m.participants
                   .map(
                     (p) => `<span class="total">
                       <span>${esc(p.name)}</span><b>${p.score}</b>
