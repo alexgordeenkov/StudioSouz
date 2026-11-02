@@ -1,6 +1,3 @@
 node_modules/
 *.log
 .idea/
-
-# Local tool binaries (downloaded, not part of the source)
-tools/yt-dlp.exe
