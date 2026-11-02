@@ -4,6 +4,6 @@
  * @type {import('../party.js').Experiment<any>['rounds']}
  */
 export const drawSongRounds = [
-  { answer: 'Мокрые кроссы', accept: ['мокрые кроссы'] },
-  { answer: 'Кукла', accept: ['кукла', 'кукла иванушки'] },
+  { answer: 'Мокрые кроссы', accept: ['мокрые кроссы'], hint: 'Исполнитель — Тима Белорусских' },
+  { answer: 'Кукла', accept: ['кукла', 'кукла иванушки'], hint: 'Исполнитель — Иванушки International' },
 ];
