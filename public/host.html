@@ -10,6 +10,7 @@
     <header class="brand">
       <span class="dot"></span>
       <h1>Экран ведущего</h1>
+      <button class="secondary lobby-return hidden" id="to-lobby" type="button">В лобби</button>
     </header>
 
     <main id="stage" class="stage"></main>
@@ -78,6 +79,8 @@
         } else if (button.id === 'next-round') {
           send(ws, { type: 'next-round' });
         } else if (button.id === 'back-lobby') {
+          send(ws, { type: 'back-to-lobby' });
+        } else if (button.id === 'to-lobby') {
           send(ws, { type: 'back-to-lobby' });
         } else if (button.id === 'finish-party') {
           send(ws, { type: 'finish-party' });
@@ -191,6 +194,8 @@
         const stage = el('stage');
         const drawCanvas = el('draw-canvas');
         drawCanvas.classList.add('hidden');
+        const lobbyReturn = el('to-lobby');
+        if (lobbyReturn) lobbyReturn.classList.toggle('hidden', m.phase === 'lobby');
 
         if (m.phase === 'lobby') {
           stage.innerHTML = `

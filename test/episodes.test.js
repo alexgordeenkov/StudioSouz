@@ -165,6 +165,21 @@ test('episode 3 carries draw-song and perepesnya rounds', () => {
   assert.ok(pack.rounds['song-about-song'].length >= 2);
 });
 
+test('episode 12 carries perepesnya and clip rounds', () => {
+  const pack = episodes.find((e) => e.id === 's3e12');
+  assert.ok(pack);
+  assert.equal(pack.season, 3);
+  assert.equal(pack.number, 12);
+  assert.equal(pack.rounds['song-about-song'].length, 3);
+  assert.equal(pack.rounds['who-did-this'].length, 2);
+  assert.equal('three-tracks' in pack.rounds, false);
+
+  for (const round of pack.rounds['who-did-this']) {
+    assert.equal(round.muted, true);
+    assert.ok(round.options.includes(round.answer));
+  }
+});
+
 test('all shipped content rounds provide hints', () => {
   for (const pack of episodes) {
     for (const [exp, rounds] of Object.entries(pack.rounds)) {
