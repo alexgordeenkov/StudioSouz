@@ -15,15 +15,7 @@
     <main id="stage" class="stage"></main>
     <canvas id="draw-canvas" class="draw-canvas hidden" width="900" height="620"></canvas>
 
-    <div id="media-bar" class="media-bar hidden">
-      <span id="media-bar-title" class="media-bar-title"></span>
-      <div class="btn-row">
-        <button class="secondary" data-media="pause">Пауза</button>
-        <button class="secondary" data-media="play">Продолжить</button>
-        <button class="secondary" data-media="restart">Перезапустить</button>
-        <button class="secondary" data-media="skip">Пропуск</button>
-      </div>
-    </div>
+    <div id="media-bar" class="media-bar hidden" role="region" aria-label="Управление медиа"></div>
 
     <script type="module">
       import { el, esc, connect, send, loadConfig, drawStroke, redrawCanvas } from '/client.js';
@@ -147,14 +139,52 @@
         return '<button class="secondary" id="reveal-hint">Показать подсказку</button>';
       }
 
+      const ICON_PLAY =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.2v13.6L19 12z" fill="currentColor"/></svg>';
+      const ICON_PAUSE =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.2" fill="currentColor"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.2" fill="currentColor"/></svg>';
+      const ICON_RESTART =
+        '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10a7.8 7.8 0 1 1 2.1 6.6"/><path d="M4.2 4.8v5.4h5.4"/></svg>';
+      const ICON_SKIP =
+        '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.5 14 12l-9 6.5z" fill="currentColor" stroke="none"/><path d="M17.5 5v14"/></svg>';
+
+      function mediaLabel(media) {
+        const raw = String((media && media.title) || '').trim();
+        if (!raw) return 'Трек';
+        if (!/\s/.test(raw) && raw.includes('-')) {
+          return raw.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
+        }
+        return raw;
+      }
+
       function renderMediaBar(m) {
         const bar = el('media-bar');
         if (!m.media || m.phase !== 'round') {
           bar.classList.add('hidden');
+          bar.innerHTML = '';
           return;
         }
+        const playing = !!m.media.playing;
         bar.classList.remove('hidden');
-        el('media-bar-title').textContent = `${m.media.title} · ${m.media.playing ? 'играет' : 'пауза'}`;
+        bar.innerHTML = `
+          <div class="media-now">
+            <span class="media-eq ${playing ? 'is-playing' : 'is-paused'}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="media-meta">
+              <span class="media-kicker">${playing ? 'Сейчас играет' : 'Пауза'}</span>
+              <span class="media-bar-title">${esc(mediaLabel(m.media))}</span>
+            </span>
+          </div>
+          <div class="media-actions">
+            <button class="media-btn media-btn-primary" data-media="${playing ? 'pause' : 'play'}">
+              ${playing ? ICON_PAUSE : ICON_PLAY}<span>${playing ? 'Пауза' : 'Продолжить'}</span>
+            </button>
+            <button class="media-btn" data-media="restart">
+              ${ICON_RESTART}<span>Сначала</span>
+            </button>
+            <button class="media-btn media-btn-ghost" data-media="skip">
+              ${ICON_SKIP}<span>Пропуск</span>
+            </button>
+          </div>`;
       }
 
       function render(m) {

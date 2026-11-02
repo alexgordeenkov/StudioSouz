@@ -66,7 +66,7 @@ export const episodes = [
       // Пародия на «Стиль собачки» (Потап и Настя), 17:17–21:16
       'song-about-song': [
         {
-          media: { localFile: 'stil-sobachki-parody' },
+          media: { localFile: 'stil-sobachki-parody', label: 'Стиль собачки — пародия' },
           answer: 'Стиль собачки',
           accept: ['стиль собачки', 'потап и настя стиль собачки', 'стиль собачки потап и настя'],
           hint: 'Оригинал исполняют Потап и Настя',
@@ -75,13 +75,13 @@ export const episodes = [
       // Мелодии и ответы — по кадрам выпуска 1 (22:16–28:39)
       'degrade-melody': [
         {
-          media: { localFile: 'marshrutka-melody' },
+          media: { localFile: 'marshrutka-melody', label: 'Маршрутка — мелодия' },
           answer: 'Маршрутка',
           accept: ['маршрутка', 'маршрутка iowa', 'iowa маршрутка'],
           hint: 'Исполнительница — IOWA',
         },
         {
-          media: { localFile: 'moryachka-melody' },
+          media: { localFile: 'moryachka-melody', label: 'Морячка — мелодия' },
           answer: 'Морячка',
           accept: ['морячка', 'морячка газманов', 'газманов морячка'],
           hint: 'Исполнитель — Олег Газманов',
@@ -199,13 +199,13 @@ export const episodes = [
       // Пародии и ответы — по выпуску 2 (19:13–24:28)
       'song-about-song': [
         {
-          media: { localFile: 'spectakl-okonchen-parody' },
+          media: { localFile: 'spectakl-okonchen-parody', label: 'Спектакль окончен — пародия' },
           answer: 'Спектакль окончен',
           accept: ['спектакль окончен', 'полина гагарина спектакль окончен'],
           hint: 'Исполнительница — Полина Гагарина',
         },
         {
-          media: { localFile: 'seks-bez-pereryva-parody' },
+          media: { localFile: 'seks-bez-pereryva-parody', label: 'Секс без перерыва — пародия' },
           answer: 'Секс без перерыва',
           accept: ['секс без перерыва', 'мальчишник секс без перерыва'],
           hint: 'Исполнитель — Мальчишник',
@@ -214,19 +214,19 @@ export const episodes = [
       // Мелодии и ответы — по кадрам выпуска 2 (25:18–29:41)
       'degrade-melody': [
         {
-          media: { localFile: 'veter-s-morya-melody' },
+          media: { localFile: 'veter-s-morya-melody', label: 'Ветер с моря дул — мелодия' },
           answer: 'Ветер с моря дул',
           accept: ['ветер с моря дул', 'ветер с моря дул натали'],
           hint: 'Исполнительница — Натали',
         },
         {
-          media: { localFile: 'o-bozhe-muzhchina-melody' },
+          media: { localFile: 'o-bozhe-muzhchina-melody', label: 'О, боже, какой мужчина — мелодия' },
           answer: 'О, боже, какой мужчина',
           accept: ['о боже какой мужчина', 'боже какой мужчина'],
           hint: 'Исполнительница — Натали',
         },
         {
-          media: { localFile: 'ryumka-vodki-melody' },
+          media: { localFile: 'ryumka-vodki-melody', label: 'Рюмка водки — мелодия' },
           answer: 'Рюмка водки',
           accept: ['рюмка водки', 'рюмка водки на столе'],
           hint: 'Исполнитель — Григорий Лепс',
@@ -283,13 +283,13 @@ export const episodes = [
       // «Перепесня» — тот же механик, что «Песня о песне» (выпуск 3, 04:28–10:50)
       'song-about-song': [
         {
-          media: { localFile: 'veter-s-morya-perepesnya' },
+          media: { localFile: 'veter-s-morya-perepesnya', label: 'Ветер с моря дул — Перепесня' },
           answer: 'Ветер с моря дул',
           accept: ['ветер с моря дул', 'ветер с моря дул натали'],
           hint: 'Оригинал исполняет Натали',
         },
         {
-          media: { localFile: 'chuzhie-guby-perepesnya' },
+          media: { localFile: 'chuzhie-guby-perepesnya', label: 'Чужие губы — Перепесня' },
           answer: 'Чужие губы',
           accept: ['чужие губы', 'руки вверх чужие губы'],
           hint: 'Оригинал исполняют Руки Вверх',

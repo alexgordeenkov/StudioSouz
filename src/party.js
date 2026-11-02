@@ -424,7 +424,12 @@ export class Party {
     const ref = r.media ?? (r.mediaTitle ? { title: r.mediaTitle, muted: r.muted } : null);
     if (!ref || !this.mediaResolver) return;
     const media = await this.mediaResolver.resolve(ref);
-    this.media = { ...media, playing: true, muted: !!(r.muted ?? ref.muted) };
+    this.media = {
+      ...media,
+      title: ref.label ?? media.title,
+      playing: true,
+      muted: !!(r.muted ?? ref.muted),
+    };
   }
 
   /**
