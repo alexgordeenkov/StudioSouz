@@ -130,14 +130,21 @@ test('episode 1 carries the extracted games from the first show', () => {
   }
 });
 
-test('episode 2 carries the retranslation rounds', () => {
+test('episode 2 carries all four extracted games', () => {
   const pack = episodes.find((e) => e.id === 's1e2');
   assert.ok(pack);
   assert.equal(pack.rounds['what-is-it'].length, 10);
   assert.equal(pack.rounds.retranslation.length, 3);
-  for (const round of pack.rounds.retranslation) {
-    assert.ok(round.text);
-    assert.ok(round.answer);
+  assert.equal(pack.rounds['rap-vs-politics'].length, 3);
+  assert.equal(pack.rounds['song-about-song'].length, 2);
+  assert.equal(pack.rounds['degrade-melody'].length, 3);
+  assert.equal(pack.rounds['who-did-this'].length, 3);
+  for (const round of pack.rounds['rap-vs-politics']) {
+    assert.ok(round.options.includes(round.answer));
+  }
+  for (const round of pack.rounds['who-did-this']) {
+    assert.equal(round.muted, true);
+    assert.ok(round.options.includes(round.answer));
   }
 });
 
