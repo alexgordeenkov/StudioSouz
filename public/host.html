@@ -12,71 +12,176 @@
       <h1>Экран ведущего</h1>
     </header>
 
-    <main class="wide-grid">
-      <section class="join-panel card">
-        <div class="label">Код для входа</div>
-        <div id="code" class="code">····</div>
-        <img id="qr" class="qr" src="/api/qr.png" alt="QR-код для входа" />
-        <div class="hint">Отсканируй QR или открой <span id="join-url">…</span></div>
-      </section>
+    <main id="stage" class="stage"></main>
 
-      <section class="lobby card">
-        <div class="lobby-head">
-          <h2>Участники</h2>
-          <div class="mode-toggle" id="mode-toggle">
-            <button data-mode="solo" class="active">Каждый сам за себя</button>
-            <button data-mode="teams">Команды</button>
-          </div>
-        </div>
-        <ul id="players" class="players host-list"></ul>
-        <div id="empty" class="empty">Пока никого. Отсканируй QR с телефона.</div>
-      </section>
-    </main>
+    <script type="module">
+      import { el, esc, connect, send, loadConfig } from '/client.js';
 
-    <script>
-      const el = (id) => document.getElementById(id);
-      const wsUrl = (role) =>
-        (location.protocol === 'https:' ? 'wss' : 'ws') + '://' + location.host + '/ws?role=' + role;
+      let joinUrl = '';
+      let state = null;
+      /** @type {Array<{ id: string, name: string, rounds: number }>} */
+      let experiments = [];
 
-      fetch('/api/config')
-        .then((r) => r.json())
-        .then((cfg) => {
-          el('code').textContent = cfg.code;
-          el('join-url').textContent = cfg.joinUrl;
-        });
-
-      const ws = new WebSocket(wsUrl('host'));
-      ws.onmessage = (e) => {
-        const m = JSON.parse(e.data);
-        if (m.type === 'lobby') render(m);
-      };
-
-      el('mode-toggle').addEventListener('click', (e) => {
-        const btn = e.target.closest('button[data-mode]');
-        if (!btn) return;
-        ws.send(JSON.stringify({ type: 'set-mode', mode: btn.dataset.mode }));
+      loadConfig().then((cfg) => {
+        joinUrl = cfg.joinUrl;
+        if (state) render(state);
       });
 
+      fetch('/api/experiments')
+        .then((r) => r.json())
+        .then((list) => {
+          experiments = list;
+          if (state) render(state);
+        });
+
+      const ws = connect('host', {
+        state: (m) => {
+          state = m;
+          render(m);
+        },
+        error: (m) => {
+          if (m && m.message) console.warn('host error:', m.message);
+        },
+      });
+
+      document.addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        if (button.dataset.mode) {
+          send(ws, { type: 'set-mode', mode: button.dataset.mode });
+        } else if (button.dataset.kick) {
+          send(ws, { type: 'kick', participantId: button.dataset.kick });
+        } else if (button.dataset.exp) {
+          send(ws, { type: 'start-experiment', experimentId: button.dataset.exp });
+        } else if (button.id === 'start-round') {
+          send(ws, { type: 'start-round' });
+        } else if (button.id === 'reveal') {
+          send(ws, { type: 'reveal' });
+        } else if (button.id === 'next-round') {
+          send(ws, { type: 'next-round' });
+        } else if (button.id === 'back-lobby') {
+          send(ws, { type: 'back-to-lobby' });
+        }
+      });
+
+      const modeButton = (mode, label, active) =>
+        `<button data-mode="${mode}" class="${active ? 'active' : ''}">${label}</button>`;
+
       function render(m) {
-        for (const btn of document.querySelectorAll('#mode-toggle button')) {
-          btn.classList.toggle('active', btn.dataset.mode === m.mode);
+        const stage = el('stage');
+
+        if (m.phase === 'lobby') {
+          stage.innerHTML = `
+            <div class="deck">
+              <div class="join-card card">
+                <div class="label">Код для входа</div>
+                <div class="code">${esc(m.code)}</div>
+                <img class="qr" src="/api/qr.png" alt="QR-код для входа" />
+                <div class="hint">Отсканируй QR или открой ${esc(joinUrl)}</div>
+              </div>
+              <div class="card">
+                <div class="lobby-head">
+                  <h2>Участники</h2>
+                  <div class="mode-toggle">
+                    ${modeButton('solo', 'Каждый сам за себя', m.mode === 'solo')}
+                    ${modeButton('teams', 'Команды', m.mode === 'teams')}
+                  </div>
+                </div>
+                <ul class="players host-list">
+                  ${m.participants
+                    .map(
+                      (p) => `<li><span>${esc(p.name)}</span><button class="kick" data-kick="${esc(p.id)}">Убрать</button></li>`
+                    )
+                    .join('')}
+                </ul>
+                ${m.participants.length ? '' : '<div class="empty">Пока никого. Отсканируй QR с телефона.</div>'}
+                <div class="experiment-menu">
+                  ${experiments
+                    .map(
+                      (e) => `<button class="menu-item" data-exp="${esc(e.id)}">
+                        <span class="mi-name">${esc(e.name)}</span>
+                        <span class="mi-count">${e.rounds} раундов</span>
+                      </button>`
+                    )
+                    .join('')}
+                </div>
+              </div>
+            </div>`;
+          return;
         }
-        const ul = el('players');
-        ul.innerHTML = '';
-        for (const p of m.participants) {
-          const li = document.createElement('li');
-          const name = document.createElement('span');
-          name.textContent = p.name;
-          const kick = document.createElement('button');
-          kick.className = 'kick';
-          kick.textContent = 'Убрать';
-          kick.addEventListener('click', () =>
-            ws.send(JSON.stringify({ type: 'kick', participantId: p.id }))
-          );
-          li.append(name, kick);
-          ul.appendChild(li);
+
+        if (m.phase === 'experiment') {
+          stage.innerHTML = `
+            <div class="card center-card">
+              <div class="label">Эксперимент</div>
+              <h2 class="experiment-name">${esc(m.experiment.name)}</h2>
+              <p class="rules">${esc(m.experiment.rules)}</p>
+              <div class="btn-row">
+                <button class="primary" id="start-round">Начать раунд</button>
+                <button class="secondary" id="back-lobby">Отмена</button>
+              </div>
+            </div>`;
+          return;
         }
-        el('empty').style.display = m.participants.length ? 'none' : 'block';
+
+        if (m.phase === 'round') {
+          stage.innerHTML = `
+            <div class="card center-card">
+              <div class="lobby-head">
+                <span class="pill">Раунд ${m.round.index + 1} / ${m.round.total}</span>
+                <span class="answers-count">Ответов: ${m.answersCount} из ${m.participants.length}</span>
+              </div>
+              <div class="collage small">
+                <img src="${esc(m.round.data.image)}" alt="Коллаж" />
+              </div>
+              <div class="btn-row"><button class="primary" id="reveal">Показать ответ</button></div>
+            </div>`;
+          return;
+        }
+
+        if (m.phase === 'reveal') {
+          const last = m.experiment.roundIndex + 1 >= m.experiment.totalRounds;
+          stage.innerHTML = `
+            <div class="card center-card">
+              <div class="label">Правильный ответ</div>
+              <h2 class="answer">${esc(m.reveal.answer)}</h2>
+              <ul class="results">
+                ${m.reveal.results
+                  .map(
+                    (r) => `<li class="result ${r.correct ? 'correct' : 'wrong'}">
+                      <span class="rname">${esc(r.name)}</span>
+                      <span class="rvalue">${r.value ? esc(r.value) : '—'}</span>
+                      <span class="rpoints">${r.correct ? '+' + r.points : '0'}</span>
+                    </li>`
+                  )
+                  .join('')}
+              </ul>
+              <div class="btn-row">
+                <button class="primary" id="next-round">${last ? 'Показать итоги' : 'Следующий раунд'}</button>
+              </div>
+            </div>`;
+          return;
+        }
+
+        if (m.phase === 'results') {
+          const sorted = [...m.participants].sort((a, b) => b.score - a.score);
+          stage.innerHTML = `
+            <div class="card center-card">
+              <div class="label">Итоги эксперимента</div>
+              <ol class="standings">
+                ${sorted
+                  .map(
+                    (p, i) => `<li>
+                      <span class="pos">${i + 1}</span>
+                      <span class="sname">${esc(p.name)}</span>
+                      <span class="spoints">${p.score}</span>
+                    </li>`
+                  )
+                  .join('')}
+              </ol>
+              <div class="btn-row"><button class="primary" id="back-lobby">В лобби</button></div>
+            </div>`;
+        }
       }
     </script>
   </body>

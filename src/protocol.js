@@ -31,7 +31,15 @@ export function handleMessage(party, conn, message, conns = []) {
     effects.push({ kind: 'direct', target: conn, payload });
   const broadcast = (/** @type {Record<string, any>} */ payload) =>
     effects.push({ kind: 'broadcast', target: null, payload });
-  const lobby = () => broadcast({ type: 'lobby', ...party.getState() });
+  const state = () => broadcast({ type: 'state', ...party.getState() });
+
+  const requireHost = () => {
+    if (conn.role !== 'host') {
+      direct({ type: 'error', message: 'Это действие доступно только ведущему' });
+      return false;
+    }
+    return true;
+  };
 
   const type = message && message.type;
 
@@ -54,7 +62,7 @@ export function handleMessage(party, conn, message, conns = []) {
         const p = party.addParticipant(message.name);
         conn.participantId = p.id;
         direct({ type: 'joined', participantId: p.id, name: p.name });
-        lobby();
+        state();
       } catch (e) {
         direct({ type: 'error', message: /** @type {Error} */ (e).message });
       }
@@ -65,16 +73,13 @@ export function handleMessage(party, conn, message, conns = []) {
       if (conn.participantId) {
         party.removeParticipant(conn.participantId);
         conn.participantId = null;
-        lobby();
+        state();
       }
       break;
     }
 
     case 'kick': {
-      if (conn.role !== 'host') {
-        direct({ type: 'error', message: 'Только ведущий может убрать участника' });
-        break;
-      }
+      if (!requireHost()) break;
       const id = String(message.participantId ?? '');
       if (!party.getParticipant(id)) {
         direct({ type: 'error', message: 'Участник не найден' });
@@ -87,18 +92,81 @@ export function handleMessage(party, conn, message, conns = []) {
           effects.push({ kind: 'direct', target: c, payload: { type: 'kicked' } });
         }
       }
-      lobby();
+      state();
       break;
     }
 
     case 'set-mode': {
-      if (conn.role !== 'host') {
-        direct({ type: 'error', message: 'Только ведущий меняет режим' });
+      if (!requireHost()) break;
+      try {
+        party.setMode(message.mode);
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
+    case 'start-experiment': {
+      if (!requireHost()) break;
+      try {
+        party.selectExperiment(String(message.experimentId ?? ''));
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
+    case 'start-round': {
+      if (!requireHost()) break;
+      try {
+        party.startRound();
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
+    case 'reveal': {
+      if (!requireHost()) break;
+      try {
+        party.revealRound();
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
+    case 'next-round': {
+      if (!requireHost()) break;
+      try {
+        party.nextRound();
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
+    case 'back-to-lobby': {
+      if (!requireHost()) break;
+      party.backToLobby();
+      state();
+      break;
+    }
+
+    case 'submit-answer': {
+      if (conn.role !== 'controller' || !conn.participantId) {
+        direct({ type: 'error', message: 'Отвечать может только участник' });
         break;
       }
       try {
-        party.setMode(message.mode);
-        lobby();
+        party.submitAnswer(conn.participantId, message.value);
+        direct({ type: 'answer-accepted' });
+        state();
       } catch (e) {
         direct({ type: 'error', message: /** @type {Error} */ (e).message });
       }
