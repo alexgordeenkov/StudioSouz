@@ -66,3 +66,11 @@ test('song-about-song accepts the original hit and keeps its media title', () =>
   assert.equal(data.mediaTitle, round.mediaTitle);
   assert.equal('answer' in data, false);
 });
+
+test('degrade-melody accepts the song title in any case', () => {
+  const round = { mediaTitle: 'Унижай мелодию', answer: 'Комарово' };
+  assert.equal(degradeMelody.isCorrect(round, 'комарово'), true);
+  assert.equal(degradeMelody.isCorrect(round, '  КОМАРОВО '), true);
+  assert.equal(degradeMelody.isCorrect(round, 'Кукла'), false);
+  assert.equal(degradeMelody.isCorrect(round, ''), false);
+});
