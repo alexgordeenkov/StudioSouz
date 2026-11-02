@@ -13,6 +13,7 @@
     </header>
 
     <main id="stage" class="stage"></main>
+    <canvas id="draw-canvas" class="draw-canvas hidden" width="900" height="620"></canvas>
 
     <section class="card media-card" id="media-panel">
       <div class="lobby-head">
@@ -32,7 +33,7 @@
     </section>
 
     <script type="module">
-      import { el, esc, connect, send, loadConfig } from '/client.js';
+      import { el, esc, connect, send, loadConfig, drawStroke, redrawCanvas } from '/client.js';
 
       let joinUrl = '';
       let state = null;
@@ -59,6 +60,13 @@
         },
         error: (m) => {
           if (m && m.message) console.warn('host error:', m.message);
+        },
+        draw: (m) => {
+          const canvas = el('draw-canvas');
+          if (!canvas.classList.contains('hidden')) drawStroke(canvas.getContext('2d'), canvas, m.stroke);
+        },
+        canvas: (m) => {
+          redrawCanvas(el('draw-canvas'), m.strokes);
         },
       });
 
@@ -126,6 +134,8 @@
 
       function render(m) {
         const stage = el('stage');
+        const drawCanvas = el('draw-canvas');
+        drawCanvas.classList.add('hidden');
 
         if (m.phase === 'lobby') {
           stage.innerHTML = `
@@ -183,6 +193,20 @@
         }
 
         if (m.phase === 'round') {
+          if (m.experiment && m.experiment.kind === 'drawing') {
+            drawCanvas.classList.remove('hidden');
+            redrawCanvas(drawCanvas, m.drawing);
+            stage.innerHTML = `
+              <div class="card center-card">
+                <div class="lobby-head">
+                  <span class="pill">Раунд ${m.round.index + 1} / ${m.round.total}</span>
+                  <span class="answers-count">Ответов: ${m.answersCount} из ${m.participants.length}</span>
+                </div>
+                <div class="hint">Рисунок на общем экране. Когда все угадали — раскройте ответ.</div>
+                <div class="btn-row"><button class="primary" id="reveal">Показать ответ</button></div>
+              </div>`;
+            return;
+          }
           stage.innerHTML = `
             <div class="card center-card">
               <div class="lobby-head">

@@ -28,7 +28,7 @@
     </main>
 
     <script type="module">
-      import { el, esc, connect, send } from '/client.js';
+      import { el, esc, connect, send, drawStroke, redrawCanvas } from '/client.js';
 
       const params = new URLSearchParams(location.search);
       if (params.get('code')) el('code').value = params.get('code').toUpperCase();
@@ -36,6 +36,8 @@
       let me = null;
       let lastState = null;
       let submittedRound = -1;
+      let drawerCanvas = null;
+      let drawRenderKey = null;
 
       const ws = connect('controller', {
         joined: (m) => {
@@ -62,6 +64,9 @@
             render(lastState);
           }
         },
+        canvas: (m) => {
+          if (drawerCanvas) redrawCanvas(drawerCanvas, m.strokes);
+        },
       });
 
       el('join').addEventListener('submit', (event) => {
@@ -76,8 +81,43 @@
         send(ws, { type: 'join', name, code });
       });
 
-      function render(m) {
-        const join = el('join');
+      function setupDrawer(canvas, socket, strokes) {
+        drawerCanvas = canvas;
+        redrawCanvas(canvas, strokes);
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        let last = null;
+        const pos = (event) => {
+          const rect = canvas.getBoundingClientRect();
+          return {
+            x: (event.clientX - rect.left) / rect.width,
+            y: (event.clientY - rect.top) / rect.height,
+          };
+        };
+        canvas.addEventListener('pointerdown', (event) => {
+          drawing = true;
+          last = pos(event);
+          canvas.setPointerCapture(event.pointerId);
+        });
+        canvas.addEventListener('pointermove', (event) => {
+          if (!drawing || !last) return;
+          const p = pos(event);
+          const stroke = { x0: last.x, y0: last.y, x1: p.x, y1: p.y };
+          drawStroke(ctx, canvas, stroke);
+          send(socket, { type: 'draw', stroke });
+          last = p;
+        });
+        const stop = () => {
+          drawing = false;
+          last = null;
+        };
+        canvas.addEventListener('pointerup', stop);
+        canvas.addEventListener('pointercancel', stop);
+        el('clear-canvas').addEventListener('click', () => send(socket, { type: 'clear-canvas' }));
+        el('undo-draw').addEventListener('click', () => send(socket, { type: 'undo-draw' }));
+      }
+
+      function render(m) {        const join = el('join');
         const stage = el('stage');
 
         if (!me) {
@@ -105,17 +145,38 @@
         }
 
         if (m.phase === 'round') {
+          const isDrawing = m.experiment && m.experiment.kind === 'drawing';
+          const isDrawer = isDrawing && m.drawerId === me;
+          if (isDrawer) {
+            const key = 'draw:' + m.round.index;
+            if (key === drawRenderKey && el('draw-canvas')) return;
+            drawRenderKey = key;
+            stage.innerHTML = `
+              <div class="draw-phone">
+                <div class="hint">Нарисуй песню</div>
+                <canvas id="draw-canvas" width="900" height="620"></canvas>
+                <div class="btn-row">
+                  <button class="secondary" id="clear-canvas">Очистить</button>
+                  <button class="secondary" id="undo-draw">Отменить</button>
+                </div>
+              </div>`;
+            setupDrawer(el('draw-canvas'), ws, m.drawing);
+            return;
+          }
+          drawRenderKey = null;
           const submitted = submittedRound === m.round.index;
           stage.innerHTML = `
             <div class="round-phone">
-              <div class="collage small phone-collage">
-                <img src="${esc(m.round.data.image)}" alt="Коллаж" />
-              </div>
+              ${
+                isDrawing
+                  ? '<div class="hint">Угадайте песню по рисунку</div>'
+                  : `<div class="collage small phone-collage"><img src="${esc(m.round.data.image)}" alt="Коллаж" /></div>`
+              }
               ${
                 submitted
                   ? '<div class="accepted">Ответ принят</div>'
                   : `<form id="answer-form">
-                       <label>Твой ответ<input id="answer" maxlength="60" autocomplete="off" placeholder="Гибридное имя" /></label>
+                       <label>Твой ответ<input id="answer" maxlength="60" autocomplete="off" placeholder="Название песни" /></label>
                        <button class="primary" type="submit">Ответить</button>
                      </form>`
               }

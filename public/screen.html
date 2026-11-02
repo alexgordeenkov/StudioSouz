@@ -13,10 +13,11 @@
     </header>
 
     <main id="stage" class="stage"></main>
+    <canvas id="draw-canvas" class="draw-canvas hidden" width="900" height="620"></canvas>
     <div id="media" class="media-layer"></div>
 
     <script type="module">
-      import { el, esc, connect, loadConfig } from '/client.js';
+      import { el, esc, connect, loadConfig, drawStroke, redrawCanvas } from '/client.js';
 
       let joinUrl = '';
       let state = null;
@@ -31,6 +32,13 @@
           state = m;
           render(m);
           renderMedia(m);
+        },
+        draw: (m) => {
+          const canvas = el('draw-canvas');
+          if (!canvas.classList.contains('hidden')) drawStroke(canvas.getContext('2d'), canvas, m.stroke);
+        },
+        canvas: (m) => {
+          redrawCanvas(el('draw-canvas'), m.strokes);
         },
       });
 
@@ -85,6 +93,8 @@
 
       function render(m) {
         const stage = el('stage');
+        const drawCanvas = el('draw-canvas');
+        drawCanvas.classList.add('hidden');
         if (m.phase === 'lobby') {
           stage.innerHTML = `
             <div class="deck">
@@ -120,6 +130,20 @@
         }
 
         if (m.phase === 'round') {
+          if (m.experiment && m.experiment.kind === 'drawing') {
+            drawCanvas.classList.remove('hidden');
+            const drawer = m.participants.find((p) => p.id === m.drawerId);
+            stage.innerHTML = `
+              <div class="round">
+                <div class="round-head">
+                  <span class="pill">Раунд ${m.round.index + 1} / ${m.round.total}</span>
+                  <span class="answers-count">Ответов: ${m.answersCount}</span>
+                </div>
+                <div class="hint">Рисует: ${esc(drawer ? drawer.name : '—')}. Угадывайте название песни на пультах.</div>
+              </div>`;
+            redrawCanvas(drawCanvas, m.drawing);
+            return;
+          }
           stage.innerHTML = `
             <div class="round">
               <div class="round-head">
