@@ -129,6 +129,12 @@ body.wide {
   text-shadow: 0 3px 0 rgba(70, 35, 0, 0.55);
 }
 
+.lobby-return {
+  margin-left: auto;
+  padding: 10px 18px;
+  font-size: clamp(12px, 1vw, 15px);
+}
+
 .wide-grid {
   display: grid;
   grid-template-columns: minmax(300px, 1fr) minmax(320px, 1.12fr);
