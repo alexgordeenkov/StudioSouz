@@ -25,6 +25,9 @@ function contentType(file) {
   if (file.endsWith('.js')) return 'text/javascript; charset=utf-8';
   if (file.endsWith('.svg')) return 'image/svg+xml';
   if (file.endsWith('.png')) return 'image/png';
+  if (file.endsWith('.jpg') || file.endsWith('.jpeg')) return 'image/jpeg';
+  if (file.endsWith('.webp')) return 'image/webp';
+  if (file.endsWith('.gif')) return 'image/gif';
   return 'application/octet-stream';
 }
 

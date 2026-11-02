@@ -623,6 +623,30 @@ button.primary:active {
   flex-wrap: wrap;
 }
 
+.totals {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 22px;
+  margin-top: 22px;
+}
+
+.total {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(246, 196, 69, 0.08);
+  font-size: clamp(14px, 1.3vw, 20px);
+}
+
+.total b {
+  font-family: var(--display);
+  color: var(--gold);
+}
+
 .secondary {
   padding: 14px 22px;
   border-radius: 10px;

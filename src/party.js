@@ -62,6 +62,8 @@ export class Party {
     this._nextId = 1;
     /** @type {Record<string, Experiment<any>>} */
     this.experiments = experiments;
+    /** @type {boolean} */
+    this.speedBonus = true;
     /** @type {Phase} */
     this.phase = 'lobby';
     /** @type {Experiment<any> | null} */
@@ -103,6 +105,13 @@ export class Party {
   setMode(mode) {
     if (mode !== 'solo' && mode !== 'teams') throw new Error('Неизвестный режим');
     this.mode = mode;
+  }
+
+  /**
+   * @param {boolean} enabled
+   */
+  setSpeedBonus(enabled) {
+    this.speedBonus = !!enabled;
   }
 
   /**
@@ -175,7 +184,7 @@ export class Party {
 
     for (const r of results) {
       if (r.correct) r.points = 1;
-      if (firstCorrect && r.participantId === firstCorrect.id) r.points += 1;
+      if (this.speedBonus && firstCorrect && r.participantId === firstCorrect.id) r.points += 1;
       const p = this.participants.get(r.participantId);
       if (p) p.score += r.points;
     }
@@ -233,6 +242,7 @@ export class Party {
       round,
       reveal: this.reveal,
       answersCount: this.answers.size,
+      speedBonus: this.speedBonus,
     };
   }
 }

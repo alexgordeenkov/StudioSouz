@@ -107,6 +107,13 @@ export function handleMessage(party, conn, message, conns = []) {
       break;
     }
 
+    case 'set-speed-bonus': {
+      if (!requireHost()) break;
+      party.setSpeedBonus(!!message.enabled);
+      state();
+      break;
+    }
+
     case 'start-experiment': {
       if (!requireHost()) break;
       try {

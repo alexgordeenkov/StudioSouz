@@ -135,3 +135,18 @@ test('reveal shows the answer and per-player results', () => {
   assert.equal(state.reveal?.results.length, 1);
   assert.equal(state.reveal?.results[0].correct, false);
 });
+
+test('speed bonus can be turned off by the host', () => {
+  const party = makeParty();
+  const a = party.addParticipant('A');
+  const b = party.addParticipant('B');
+  party.setSpeedBonus(false);
+  party.selectExperiment('test');
+  party.startRound();
+  party.submitAnswer(a.id, 'Уилл Митяев', 1000);
+  party.submitAnswer(b.id, 'Уилл Митяев', 2000);
+  const reveal = party.revealRound();
+  const points = Object.fromEntries(reveal.results.map((r) => [r.name, r.points]));
+  assert.equal(points.A, 1);
+  assert.equal(points.B, 1);
+});

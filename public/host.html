@@ -49,6 +49,8 @@
         if (!button) return;
         if (button.dataset.mode) {
           send(ws, { type: 'set-mode', mode: button.dataset.mode });
+        } else if (button.dataset.speed) {
+          send(ws, { type: 'set-speed-bonus', enabled: button.dataset.speed === 'on' });
         } else if (button.dataset.kick) {
           send(ws, { type: 'kick', participantId: button.dataset.kick });
         } else if (button.dataset.exp) {
@@ -85,6 +87,7 @@
                   <div class="mode-toggle">
                     ${modeButton('solo', 'Каждый сам за себя', m.mode === 'solo')}
                     ${modeButton('teams', 'Команды', m.mode === 'teams')}
+                    <button data-speed="${m.speedBonus ? 'off' : 'on'}">Бонус за скорость: ${m.speedBonus ? 'вкл' : 'выкл'}</button>
                   </div>
                 </div>
                 <ul class="players host-list">
@@ -156,6 +159,12 @@
                   )
                   .join('')}
               </ul>
+              <div class="totals">
+                ${[...m.participants]
+                  .sort((a, b) => b.score - a.score)
+                  .map((p) => `<span class="total"><span>${esc(p.name)}</span><b>${p.score}</b></span>`)
+                  .join('')}
+              </div>
               <div class="btn-row">
                 <button class="primary" id="next-round">${last ? 'Показать итоги' : 'Следующий раунд'}</button>
               </div>

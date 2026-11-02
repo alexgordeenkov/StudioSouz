@@ -101,6 +101,12 @@
                   )
                   .join('')}
               </ul>
+              <div class="totals">
+                ${[...m.participants]
+                  .sort((a, b) => b.score - a.score)
+                  .map((p) => `<span class="total"><span>${esc(p.name)}</span><b>${p.score}</b></span>`)
+                  .join('')}
+              </div>
             </div>`;
           return;
         }
