@@ -1,5 +1,5 @@
-import { whatIsIt } from '../experiments/what-is-it.js';
-import { drawSong } from '../experiments/draw-song.js';
+import { whatIsItRounds } from './what-is-it-rounds.js';
+import { drawSongRounds } from './draw-song-rounds.js';
 
 /**
  * @typedef {Object} EpisodePack
@@ -23,7 +23,7 @@ export const episodes = [
     title: 'Сезон 1 · Выпуск 1',
     rounds: {
       // 7 коллажей первого выпуска
-      'what-is-it': whatIsIt.rounds.slice(0, 7),
+      'what-is-it': whatIsItRounds.slice(0, 7),
       // Цитаты и ответы — по кадрам выпуска 1 (10:19–16:49)
       'rap-vs-politics': [
         {
@@ -113,7 +113,7 @@ export const episodes = [
     title: 'Сезон 1 · Выпуск 2',
     rounds: {
       // остальные 10 коллажей второго выпуска
-      'what-is-it': whatIsIt.rounds.slice(7),
+      'what-is-it': whatIsItRounds.slice(7),
       // «Переперевод» — искажённый текст и ответы по кадрам выпуска 2 (10:27–13:02)
       retranslation: [
         {
@@ -156,7 +156,7 @@ export const episodes = [
     number: 24,
     title: 'Сезон 3 · Выпуск 24',
     rounds: {
-      'draw-song': drawSong.rounds.slice(),
+      'draw-song': drawSongRounds.slice(),
       // Реальный клип из «Клипобола» 3-го выпуска (10:54)
       clipobol: [
         {
