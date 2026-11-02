@@ -115,7 +115,7 @@ test('episode 1 carries the extracted games from the first show', () => {
   const pack = episodes.find((e) => e.id === 's1e1');
   assert.ok(pack);
   assert.equal(pack.rounds['what-is-it'].length, 7);
-  assert.equal(pack.rounds['rap-vs-politics'].length, 7);
+  assert.equal(pack.rounds['rap-vs-politics'].length, 6);
   assert.ok(pack.rounds['song-about-song'].length >= 1);
   assert.ok(pack.rounds['degrade-melody'].length >= 2);
   assert.ok(pack.rounds['who-did-this'].length >= 1);

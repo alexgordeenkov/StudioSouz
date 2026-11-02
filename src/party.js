@@ -242,6 +242,7 @@ export class Party {
     this.roundIndex++;
     this.answers.clear();
     this.reveal = null;
+    this.media = null;
     this.phase = 'round';
     this.drawerId = null;
     this.drawing = [];

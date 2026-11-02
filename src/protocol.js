@@ -248,6 +248,7 @@ export async function handleMessage(party, conn, message, conns = []) {
       if (!requireHost()) break;
       try {
         party.nextRound();
+        if (party.getState().phase === 'round') await party.autoPlayRoundMedia();
         state();
       } catch (e) {
         direct({ type: 'error', message: /** @type {Error} */ (e).message });
