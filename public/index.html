@@ -81,6 +81,13 @@
         send(ws, { type: 'join', name, code });
       });
 
+      document.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-option]');
+        if (!button) return;
+        if (lastState && lastState.round && submittedRound === lastState.round.index) return;
+        send(ws, { type: 'submit-answer', value: button.dataset.option });
+      });
+
       function setupDrawer(canvas, socket, strokes) {
         drawerCanvas = canvas;
         redrawCanvas(canvas, strokes);
@@ -165,23 +172,24 @@
           }
           drawRenderKey = null;
           const submitted = submittedRound === m.round.index;
-          stage.innerHTML = `
-            <div class="round-phone">
-              ${
-                isDrawing
-                  ? '<div class="hint">Угадайте песню по рисунку</div>'
-                  : `<div class="collage small phone-collage"><img src="${esc(m.round.data.image)}" alt="Коллаж" /></div>`
-              }
-              ${
-                submitted
-                  ? '<div class="accepted">Ответ принят</div>'
-                  : `<form id="answer-form">
-                       <label>Твой ответ<input id="answer" maxlength="60" autocomplete="off" placeholder="Название песни" /></label>
-                       <button class="primary" type="submit">Ответить</button>
-                     </form>`
-              }
-            </div>`;
-          if (!submitted) {
+          const options = m.round.data.options;
+          const picture = m.round.data.image
+            ? `<div class="collage small phone-collage"><img src="${esc(m.round.data.image)}" alt="Коллаж" /></div>`
+            : '<div class="hint">Смотрите на общий экран</div>';
+          const answerArea = submitted
+            ? '<div class="accepted">Ответ принят</div>'
+            : options
+              ? `<div class="options">${options
+                  .map((o) => `<button class="option" data-option="${esc(o)}">${esc(o)}</button>`)
+                  .join('')}</div>`
+              : `<form id="answer-form">
+                   <label>Твой ответ<input id="answer" maxlength="60" autocomplete="off" placeholder="Название песни" /></label>
+                   <button class="primary" type="submit">Ответить</button>
+                 </form>`;
+          stage.innerHTML = `<div class="round-phone">${
+            isDrawing ? '<div class="hint">Угадайте песню по рисунку</div>' : picture
+          }${answerArea}</div>`;
+          if (!submitted && !options) {
             el('answer-form').addEventListener('submit', (event) => {
               event.preventDefault();
               const value = el('answer').value.trim();

@@ -214,7 +214,7 @@
                 <span class="answers-count">Ответов: ${m.answersCount} из ${m.participants.length}</span>
               </div>
               <div class="collage small">
-                <img src="${esc(m.round.data.image)}" alt="Коллаж" />
+                ${m.round.data.image ? `<img src="${esc(m.round.data.image)}" alt="Коллаж" />` : '<div class="hint">Задание на общем экране</div>'}
               </div>
               <div class="btn-row"><button class="primary" id="reveal">Показать ответ</button></div>
             </div>`;

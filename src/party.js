@@ -271,6 +271,16 @@ export class Party {
     this.drawing.pop();
   }
 
+  async autoPlayRoundMedia() {
+    const round = this.experiment ? this.experiment.rounds[this.roundIndex] : null;
+    if (!round) return;
+    const r = /** @type {any} */ (round);
+    const ref = r.media ?? (r.mediaTitle ? { title: r.mediaTitle, muted: r.muted } : null);
+    if (!ref || !this.mediaResolver) return;
+    const media = await this.mediaResolver.resolve(ref);
+    this.media = { ...media, playing: true, muted: !!(r.muted ?? ref.muted) };
+  }
+
   getState() {
     const exp = this.experiment;
     const round =
