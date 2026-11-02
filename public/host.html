@@ -126,6 +126,8 @@
           send(ws, { type: 'next-round' });
         } else if (button.id === 'back-lobby') {
           send(ws, { type: 'back-to-lobby' });
+        } else if (button.id === 'finish-party') {
+          send(ws, { type: 'finish-party' });
         }
       });
 
@@ -252,6 +254,18 @@
           return;
         }
 
+        if (m.phase === 'winner') {
+          const w = m.winner;
+          stage.innerHTML = `
+            <div class="card center-card">
+              <div class="label">Победитель партии</div>
+              <h2 class="answer">${esc(w ? w.name : '—')}</h2>
+              <div class="hint">${w ? w.score + ' балл(ов)' : ''}</div>
+              <div class="btn-row"><button class="primary" id="back-lobby">В лобби</button></div>
+            </div>`;
+          return;
+        }
+
         if (m.phase === 'results') {
           const sorted = [...m.participants].sort((a, b) => b.score - a.score);
           stage.innerHTML = `
@@ -268,7 +282,7 @@
                   )
                   .join('')}
               </ol>
-              <div class="btn-row"><button class="primary" id="back-lobby">В лобби</button></div>
+              <div class="btn-row"><button class="primary" id="back-lobby">В лобби</button><button class="secondary" id="finish-party">Завершить партию</button></div>
             </div>`;
         }
       }
