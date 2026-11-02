@@ -166,6 +166,28 @@ export async function handleMessage(party, conn, message, conns = []) {
       break;
     }
 
+    case 'rejoin': {
+      if (conn.role !== 'controller') break;
+      const id = String(message.participantId ?? '');
+      const participant = party.getParticipant(id);
+      if (!participant) {
+        direct({ type: 'error', message: 'Участник не найден' });
+        break;
+      }
+      conn.participantId = id;
+      party.markConnected(id);
+      direct({ type: 'joined', participantId: id, name: participant.name });
+      state();
+      break;
+    }
+
+    case 'finish-party': {
+      if (!requireHost()) break;
+      party.finishParty();
+      state();
+      break;
+    }
+
     case 'start-experiment': {
       if (!requireHost()) break;
       try {

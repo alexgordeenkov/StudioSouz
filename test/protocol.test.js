@@ -203,3 +203,26 @@ test('only the assigned drawer can draw, and strokes are broadcast', async () =>
   const denied = await handleMessage(party, other, { type: 'draw', stroke: { x0: 0, y0: 0, x1: 1, y1: 1 } }, [host, a, b]);
   assert.ok(denied.some((e) => e.payload.type === 'error'));
 });
+
+test('host finishes the party and the winner is shown', async () => {
+  const party = makeParty();
+  const host = mkConn('host');
+  const a = mkConn('controller');
+  await handleMessage(party, a, { type: 'join', name: 'A', code: 'ABCD' }, [host, a]);
+  await handleMessage(party, host, { type: 'finish-party' }, [host, a]);
+  assert.equal(party.getState().phase, 'winner');
+  assert.equal(party.getState().winner?.name, 'A');
+});
+
+test('a disconnected participant can rejoin with the same id', async () => {
+  const party = makeParty();
+  const a = mkConn('controller');
+  await handleMessage(party, a, { type: 'join', name: 'A', code: 'ABCD' }, [a]);
+  const id = a.participantId;
+  party.markDisconnected(id);
+  const b = mkConn('controller');
+  const effects = await handleMessage(party, b, { type: 'rejoin', participantId: id }, [b]);
+  assert.equal(b.participantId, id);
+  assert.ok(effects.some((e) => e.payload.type === 'joined'));
+  assert.equal(party.getState().participants[0].connected, true);
+});

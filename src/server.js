@@ -180,7 +180,7 @@ wss.on('connection', (ws, req) => {
     const idx = conns.indexOf(conn);
     if (idx >= 0) conns.splice(idx, 1);
     if (conn.participantId) {
-      party.removeParticipant(conn.participantId);
+      party.markDisconnected(conn.participantId);
       broadcast({ type: 'state', ...party.getState() });
     }
   });

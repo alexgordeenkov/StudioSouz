@@ -203,3 +203,26 @@ test('drawing round assigns a drawer, stores strokes, and skips the drawer in sc
   assert.equal(reveal.results.length, 1);
   assert.equal(reveal.results[0].correct, true);
 });
+
+test('finishing the party shows the top scorer as winner', () => {
+  const party = makeParty();
+  const a = party.addParticipant('A');
+  const b = party.addParticipant('B');
+  a.score = 3;
+  b.score = 5;
+  party.finishParty();
+  const state = party.getState();
+  assert.equal(state.phase, 'winner');
+  assert.equal(state.winner?.name, 'B');
+  assert.equal(state.winner?.score, 5);
+});
+
+test('a dropped participant stays in the party and can reconnect', () => {
+  const party = makeParty();
+  const a = party.addParticipant('A');
+  party.markDisconnected(a.id);
+  assert.equal(party.getState().participants[0].connected, false);
+  assert.equal(party.getState().participants.length, 1);
+  party.markConnected(a.id);
+  assert.equal(party.getState().participants[0].connected, true);
+});

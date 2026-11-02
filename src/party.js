@@ -11,7 +11,7 @@
  */
 
 /**
- * @typedef {'lobby' | 'experiment' | 'round' | 'reveal' | 'results'} Phase
+ * @typedef {'lobby' | 'experiment' | 'round' | 'reveal' | 'results' | 'winner'} Phase
  */
 
 /**
@@ -106,6 +106,22 @@ export class Party {
   removeParticipant(id) {
     this.answers.delete(id);
     return this.participants.delete(id);
+  }
+
+  /**
+   * @param {string} id
+   */
+  markDisconnected(id) {
+    const p = this.participants.get(id);
+    if (p) p.connected = false;
+  }
+
+  /**
+   * @param {string} id
+   */
+  markConnected(id) {
+    const p = this.participants.get(id);
+    if (p) p.connected = true;
   }
 
   /**
@@ -235,6 +251,10 @@ export class Party {
     this.reveal = null;
   }
 
+  finishParty() {
+    this.phase = 'winner';
+  }
+
   /**
    * @param {{ title?: string, youtubeId?: string, localFile?: string }} request
    */
@@ -309,6 +329,13 @@ export class Party {
       media: this.media,
       drawerId: this.drawerId,
       drawing: this.drawing,
+      winner:
+        this.phase === 'winner'
+          ? (() => {
+              const sorted = [...this.participants.values()].sort((a, b) => b.score - a.score);
+              return sorted[0] ? { id: sorted[0].id, name: sorted[0].name, score: sorted[0].score } : null;
+            })()
+          : null,
     };
   }
 }
