@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { whatIsIt } from '../src/experiments/what-is-it.js';
 
 test('what-is-it content is the real show rounds with images', () => {
-  assert.equal(whatIsIt.rounds.length, 7);
+  assert.equal(whatIsIt.rounds.length, 17);
   assert.ok(whatIsIt.rounds.every((r) => r.image && r.answer && r.accept.length > 0));
 });
 

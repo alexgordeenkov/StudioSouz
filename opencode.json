@@ -3,7 +3,7 @@
   "mcp": {
     "youtube-mcp": {
       "type": "local",
-      "command": ["node", "tools/youtube-mcp.cjs"],
+      "command": ["node", "node_modules/@inlustris/youtube-mcp/build/index.js"],
       "cwd": ".",
       "enabled": true
     }
