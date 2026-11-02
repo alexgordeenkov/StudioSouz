@@ -44,12 +44,18 @@ export const rapVsPolitics = {
   isCorrect,
 };
 
-/** @type {import('../party.js').Experiment<ShowGameRound>} */
+/**
+ * «Песня о песне» и «Перепесня» — один и тот же механик (переосмысленная
+ * песня → угадать оригинал), поэтому общий формат.
+ * @type {import('../party.js').Experiment<ShowGameRound>}
+ */
 export const songAboutSong = {
   id: 'song-about-song',
   name: 'Песня о песне',
   kind: 'quiz',
-  rules: 'Песня-пародия пересказывает известный хит. Угадайте оригинал и введите его название.',
+  rules:
+    '«Песня о песне» и «Перепесня» — один механик: пародия или «как бы её спел другой исполнитель». ' +
+    'Угадайте оригинал и введите его название.',
   rounds: [],
   isCorrect,
 };
