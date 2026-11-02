@@ -240,3 +240,31 @@ test('host selects an episode and the state carries available experiments', asyn
   assert.ok(s);
   assert.equal(s.payload.availableExperiments[0].id, 'test');
 });
+
+test('next-round autoplays the new round media and clears the old one', async () => {
+  const mediaExp = {
+    id: 'media',
+    name: 'Медиа',
+    rules: '',
+    rounds: [
+      { mediaTitle: 'Первый', answer: 'A' },
+      { mediaTitle: 'Второй', answer: 'B' },
+    ],
+    isCorrect: () => true,
+  };
+  const resolver = {
+    resolve: async (/** @type {{ title?: string }} */ req) => ({
+      source: 'youtube',
+      youtubeId: 'abcdefghijk',
+      title: req.title,
+    }),
+  };
+  const party = new Party({ code: 'ABCD', experiments: { media: mediaExp }, mediaResolver: resolver });
+  const host = mkConn('host');
+  await handleMessage(party, host, { type: 'start-experiment', experimentId: 'media' }, [host]);
+  await handleMessage(party, host, { type: 'start-round' }, [host]);
+  assert.equal(party.getState().media?.title, 'Первый');
+  await handleMessage(party, host, { type: 'reveal' }, [host]);
+  await handleMessage(party, host, { type: 'next-round' }, [host]);
+  assert.equal(party.getState().media?.title, 'Второй');
+});

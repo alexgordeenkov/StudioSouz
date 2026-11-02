@@ -15,7 +15,11 @@ function normalize(value) {
  * @property {string[]} accept
  */
 
-/** @type {import('../party.js').Experiment<DrawSongRound>} */
+/**
+ * Формат «Нарисуй песню». Раунды приходят из пакета выпуска
+ * (`src/content/draw-song-rounds.js`).
+ * @type {import('../party.js').Experiment<DrawSongRound>}
+ */
 export const drawSong = {
   id: 'draw-song',
   name: 'Нарисуй песню',
@@ -24,10 +28,7 @@ export const drawSong = {
     'Один участник рисует песню на пульте, остальные угадывают её название. ' +
     'Ведущий раскрывает ответ и засчитывает балл угадавшему.',
   /** @type {DrawSongRound[]} */
-  rounds: [
-    { answer: 'Мокрые кроссы', accept: ['мокрые кроссы'] },
-    { answer: 'Кукла', accept: ['кукла', 'кукла иванушки'] },
-  ],
+  rounds: [],
   /**
    * @param {DrawSongRound} round
    * @param {string} value

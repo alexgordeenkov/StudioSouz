@@ -110,3 +110,43 @@ test('real episode packs cover the show and carry non-empty rounds', () => {
     }
   }
 });
+
+test('episode 1 carries the extracted games from the first show', () => {
+  const pack = episodes.find((e) => e.id === 's1e1');
+  assert.ok(pack);
+  assert.equal(pack.rounds['what-is-it'].length, 7);
+  assert.equal(pack.rounds['rap-vs-politics'].length, 6);
+  assert.ok(pack.rounds['song-about-song'].length >= 1);
+  assert.ok(pack.rounds['degrade-melody'].length >= 2);
+  assert.ok(pack.rounds['who-did-this'].length >= 1);
+
+  for (const round of pack.rounds['rap-vs-politics']) {
+    assert.ok(round.quote);
+    assert.ok(round.options.includes(round.answer));
+  }
+  for (const round of pack.rounds['who-did-this']) {
+    assert.equal(round.muted, true);
+    assert.ok(round.options.includes(round.answer));
+  }
+});
+
+test('episode 2 carries the retranslation rounds', () => {
+  const pack = episodes.find((e) => e.id === 's1e2');
+  assert.ok(pack);
+  assert.equal(pack.rounds['what-is-it'].length, 10);
+  assert.equal(pack.rounds.retranslation.length, 3);
+  for (const round of pack.rounds.retranslation) {
+    assert.ok(round.text);
+    assert.ok(round.answer);
+  }
+});
+
+test('episode 3 carries clipobol and draw-song rounds', () => {
+  const pack = episodes.find((e) => e.id === 's3e24');
+  assert.ok(pack);
+  assert.ok(pack.rounds['draw-song'].length >= 2);
+  assert.ok(pack.rounds.clipobol.length >= 1);
+  for (const round of pack.rounds.clipobol) {
+    assert.ok(round.options.includes(round.answer));
+  }
+});
