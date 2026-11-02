@@ -66,7 +66,7 @@
           if (media.source === 'youtube') {
             layer.innerHTML = `<div class="media-frame"><iframe src="https://www.youtube.com/embed/${encodeURIComponent(
               media.youtubeId
-            )}?autoplay=${media.playing ? 1 : 0}&enablejsapi=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="${esc(
+            )}?autoplay=${media.playing ? 1 : 0}&mute=${media.muted ? 1 : 0}&enablejsapi=1&rel=0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen title="${esc(
               media.title
             )}"></iframe></div>`;
             ytFrame = layer.querySelector('iframe');
@@ -74,7 +74,7 @@
           } else {
             layer.innerHTML = `<div class="media-frame audio-frame"><audio src="${esc(
               media.localUrl
-            )}" ${media.playing ? 'autoplay' : ''} controls></audio></div>`;
+            )}" ${media.playing ? 'autoplay' : ''} ${media.muted ? 'muted' : ''} controls></audio></div>`;
             audioEl = layer.querySelector('audio');
             ytFrame = null;
           }
@@ -151,7 +151,7 @@
                 <span class="answers-count">Ответов: ${m.answersCount}</span>
               </div>
               <div class="collage">
-                <img src="${esc(m.round.data.image)}" alt="Коллаж" />
+                ${m.round.data.image ? `<img src="${esc(m.round.data.image)}" alt="Коллаж" />` : '<div class="hint">Смотрите на экран</div>'}
               </div>
               <div class="hint">Назовите получившееся слово на пульте. Кто быстрее — тому бонус.</div>
             </div>`;

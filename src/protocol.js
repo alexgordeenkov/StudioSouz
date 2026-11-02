@@ -181,6 +181,7 @@ export async function handleMessage(party, conn, message, conns = []) {
       if (!requireHost()) break;
       try {
         party.startRound();
+        await party.autoPlayRoundMedia();
         state();
       } catch (e) {
         direct({ type: 'error', message: /** @type {Error} */ (e).message });
