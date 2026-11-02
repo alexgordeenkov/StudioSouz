@@ -129,3 +129,14 @@ test('episode 1 carries the extracted games from the first show', () => {
     assert.ok(round.options.includes(round.answer));
   }
 });
+
+test('episode 2 carries the retranslation rounds', () => {
+  const pack = episodes.find((e) => e.id === 's1e2');
+  assert.ok(pack);
+  assert.equal(pack.rounds['what-is-it'].length, 10);
+  assert.equal(pack.rounds.retranslation.length, 3);
+  for (const round of pack.rounds.retranslation) {
+    assert.ok(round.text);
+    assert.ok(round.answer);
+  }
+});
