@@ -181,18 +181,26 @@ test('family episode carries the generated games', () => {
   const pack = episodes.find((e) => e.id === 'family');
   assert.ok(pack);
   assert.equal(pack.season, 0);
-  assert.equal(pack.rounds['lyric-quiz'].length, 8);
-  assert.equal(pack.rounds['artist-quiz'].length, 8);
-  assert.equal(pack.rounds['draw-song'].length, 3);
+  assert.equal(pack.rounds['lyric-quiz'].length, 12);
+  assert.equal(pack.rounds['artist-quiz'].length, 12);
+  assert.equal(pack.rounds['draw-song'].length, 7);
+  assert.equal(pack.rounds.retranslation.length, 6);
   for (const round of [...pack.rounds['lyric-quiz'], ...pack.rounds['artist-quiz']]) {
     assert.ok(round.prompt);
     assert.ok(round.text);
     assert.ok(round.options.includes(round.answer));
   }
+  for (const round of pack.rounds.retranslation) {
+    assert.ok(round.text);
+    assert.ok(round.answer);
+  }
 
-  const allSongs = [...pack.rounds['lyric-quiz'], ...pack.rounds['artist-quiz'], ...pack.rounds['draw-song']].map(
-    (round) => round.answer.toLowerCase()
-  );
+  const allSongs = [
+    ...pack.rounds['lyric-quiz'],
+    ...pack.rounds['artist-quiz'],
+    ...pack.rounds['draw-song'],
+    ...pack.rounds.retranslation,
+  ].map((round) => round.answer.toLowerCase());
   assert.equal(new Set(allSongs).size, allSongs.length, 'песни повторяются между играми');
 
   for (const round of pack.rounds['lyric-quiz']) {
