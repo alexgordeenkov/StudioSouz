@@ -15,6 +15,7 @@
     <main id="stage" class="stage" aria-live="polite"></main>
     <canvas id="draw-canvas" class="draw-canvas hidden" width="900" height="620"></canvas>
     <div id="media" class="media-layer"></div>
+    <button id="sound-unlock" class="sound-unlock" type="button">Включить звук</button>
 
     <script type="module">
       import { el, esc, connect, loadConfig, drawStroke, redrawCanvas } from '/client.js';
@@ -46,6 +47,38 @@
       let ytFrame = null;
       let audioEl = null;
       let lastRestartToken = 0;
+
+      const soundUnlock = el('sound-unlock');
+
+      function showSoundUnlock(show) {
+        soundUnlock.classList.toggle('hidden', !show);
+      }
+
+      function playAudio() {
+        if (!audioEl) return;
+        const el = audioEl;
+        el.muted = true;
+        const started = el.play();
+        if (!started) return;
+        started
+          .then(() => {
+            el.muted = false;
+            window.setTimeout(() => {
+              if (el.paused) showSoundUnlock(true);
+            }, 1200);
+          })
+          .catch(() => showSoundUnlock(true));
+      }
+
+      function unlockSound() {
+        showSoundUnlock(false);
+        if (!audioEl) return;
+        audioEl.muted = false;
+        audioEl.play().catch(() => showSoundUnlock(true));
+      }
+
+      soundUnlock.addEventListener('click', unlockSound);
+      document.addEventListener('keydown', unlockSound, { once: true });
 
       function promptOverlay(m) {
         const prompt = m.round && m.round.data && m.round.data.prompt;
@@ -90,7 +123,7 @@
                 <audio src="${esc(media.localUrl)}" ${media.playing ? 'autoplay' : ''} ${media.muted ? 'muted' : ''}></audio>
               </div>`;
             audioEl = layer.querySelector('audio');
-            if (media.playing) audioEl.play().catch(() => {});
+            if (media.playing) playAudio();
             ytFrame = null;
           }
           lastRestartToken = media.restartToken ?? 0;
