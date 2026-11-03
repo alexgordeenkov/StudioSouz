@@ -212,6 +212,29 @@ test('family episode carries the generated games', () => {
   }
 });
 
+test('family audio hints are wired to family rounds only', () => {
+  const pack = episodes.find((e) => e.id === 'family');
+  assert.ok(pack);
+  const rounds = [
+    ...pack.rounds['lyric-quiz'],
+    ...pack.rounds['artist-quiz'],
+    ...pack.rounds['draw-song'],
+    ...pack.rounds.retranslation,
+  ];
+  const slugs = rounds.map((round) => round.hintMedia);
+  assert.equal(slugs.filter(Boolean).length, rounds.length, 'у раунда нет hintMedia');
+  assert.equal(new Set(slugs).size, slugs.length, 'слаги подсказок повторяются');
+  for (const slug of slugs) assert.match(slug, /^[a-z0-9-]+$/, `плохой слаг: ${slug}`);
+
+  for (const other of episodes.filter((e) => e.id !== 'family')) {
+    for (const [exp, list] of Object.entries(other.rounds)) {
+      for (const round of list) {
+        assert.equal('hintMedia' in round, false, `${other.id}:${exp} получил аудиоподсказку`);
+      }
+    }
+  }
+});
+
 test('all shipped content rounds provide hints', () => {
   for (const pack of episodes) {
     for (const [exp, rounds] of Object.entries(pack.rounds)) {

@@ -49,7 +49,7 @@
  * @returns {any}
  */
 function publicRound(round) {
-  const { answer, accept, hint, ...rest } = round;
+  const { answer, accept, hint, hintMedia, ...rest } = round;
   return rest;
 }
 
@@ -101,6 +101,10 @@ export class Party {
     this.mediaResolver = mediaResolver;
     /** @type {any} */
     this.media = null;
+    /** @type {Set<string>} */
+    this.localAudio = new Set();
+    /** @type {number} */
+    this.mediaSeq = 0;
     /** @type {string | null} */
     this.drawerId = null;
     /** @type {any[]} */
@@ -406,6 +410,99 @@ export class Party {
     };
   }
 
+  /**
+   * Список локальных аудио без расширения — по нему скрываются отсутствующие варианты подсказки.
+   * @param {string[]} names
+   */
+  setLocalAudio(names) {
+    this.localAudio = new Set(names.map((name) => String(name)));
+  }
+
+  /**
+   * Существующие варианты аудиоподсказки для раунда.
+   * @param {any} round
+   * @returns {{ vocal?: string, instrumental?: string } | null}
+   */
+  hintAudio(round) {
+    const slug = round && round.hintMedia;
+    if (!slug) return null;
+    /** @type {{ vocal?: string, instrumental?: string }} */
+    const audio = {};
+    if (this.localAudio.has(slug)) audio.vocal = `/media/audio/${encodeURIComponent(slug)}.mp3`;
+    if (this.localAudio.has(`${slug}-instrumental`)) {
+      audio.instrumental = `/media/audio/${encodeURIComponent(`${slug}-instrumental`)}.mp3`;
+    }
+    return audio.vocal || audio.instrumental ? audio : null;
+  }
+
+  /**
+   * Включает аудиоподсказку вместо текущего медиа. Повторное нажатие ставит на паузу.
+   * Доступно только до раскрытия ответа.
+   * @param {'vocal' | 'instrumental'} variant
+   */
+  playHintMedia(variant) {
+    if (this.phase !== 'round' || !this.experiment) throw new Error('Сейчас не раунд');
+    const round = this.experiment.rounds[this.roundIndex];
+    const audio = this.hintAudio(round);
+    if (!audio || (variant !== 'vocal' && variant !== 'instrumental') || !audio[variant]) {
+      throw new Error('Этот вариант подсказки недоступен');
+    }
+    if (this.media && this.media.hintVariant === variant) {
+      this.media = { ...this.media, playing: !this.media.playing };
+      return this.media;
+    }
+    this.mediaSeq += 1;
+    this.media = {
+      id: `hint-${this.mediaSeq}`,
+      source: 'local',
+      localUrl: audio[variant],
+      title: variant === 'instrumental' ? 'Подсказка — без слов' : 'Подсказка — со словами',
+      playing: true,
+      hint: true,
+      hintVariant: variant,
+      progress: null,
+    };
+    return this.media;
+  }
+
+  /**
+   * Экран присылает позицию локального трека; чужие и устаревшие отчёты игнорируются.
+   * @param {string} mediaId
+   * @param {number} currentTime
+   * @param {number} duration
+   * @returns {boolean}
+   */
+  mediaProgress(mediaId, currentTime, duration) {
+    if (!this.media || this.media.id !== mediaId) return false;
+    const current = Number(currentTime);
+    if (!Number.isFinite(current) || current < 0) return false;
+    const total = Number(duration);
+    this.media = {
+      ...this.media,
+      progress: {
+        currentTime: current,
+        duration: Number.isFinite(total) && total > 0 ? total : 0,
+      },
+    };
+    return true;
+  }
+
+  /**
+   * @param {number} seconds
+   */
+  seekMedia(seconds) {
+    if (!this.media) return;
+    const value = Number(seconds);
+    if (!Number.isFinite(value) || value < 0) return;
+    const duration = this.media.progress ? this.media.progress.duration : 0;
+    this.media = {
+      ...this.media,
+      playing: true,
+      seekTo: duration ? Math.min(value, duration) : value,
+      seekToken: (this.media.seekToken ?? 0) + 1,
+    };
+  }
+
   /** @param {any} stroke */
   draw(stroke) {
     if (!this.drawerId) throw new Error('Сейчас никто не рисует');
@@ -461,6 +558,8 @@ export class Party {
       if (forHost) {
         data.answer = raw.answer;
         data.hint = raw.hint;
+        const hintAudio = this.hintAudio(raw);
+        if (hintAudio) data.hintAudio = hintAudio;
       } else if (this.hintRevealed && raw.hint) {
         data.hint = raw.hint;
       }

@@ -23,6 +23,10 @@
 
       let joinUrl = '';
       let state = null;
+      let progress = null;
+      let progressMediaId = null;
+      let pendingSeek = null;
+      let draggingSeek = false;
 
       loadConfig().then((cfg) => {
         joinUrl = cfg.joinUrl;
@@ -32,8 +36,28 @@
       const ws = connect('host', {
         state: (m) => {
           state = m;
+          const media = m.media;
+          if (!media || !media.hint) {
+            progress = null;
+            progressMediaId = null;
+            pendingSeek = null;
+          } else if (media.id !== progressMediaId) {
+            progressMediaId = media.id;
+            progress = media.progress || null;
+            pendingSeek = null;
+          } else if (pendingSeek == null && media.progress) {
+            progress = media.progress;
+          }
           render(m);
           renderMediaBar(m);
+          updateHintSeek();
+        },
+        'media-progress': (m) => {
+          if (pendingSeek != null && Math.abs(m.currentTime - pendingSeek) < 1.5) pendingSeek = null;
+          if (pendingSeek == null) {
+            progress = { currentTime: m.currentTime, duration: m.duration };
+          }
+          updateHintSeek();
         },
         error: (m) => {
           if (m && m.message) console.warn('host error:', m.message);
@@ -74,6 +98,8 @@
           });
         } else if (button.dataset.media) {
           send(ws, { type: 'media-control', action: button.dataset.media });
+        } else if (button.dataset.hint) {
+          send(ws, { type: 'play-hint', variant: button.dataset.hint });
         } else if (button.id === 'reveal') {
           send(ws, { type: 'reveal' });
         } else if (button.id === 'next-round') {
@@ -86,6 +112,31 @@
           send(ws, { type: 'finish-party' });
         }
       });
+
+      const stageEl = el('stage');
+      stageEl.addEventListener('input', (event) => {
+        if (event.target.id !== 'hint-seek') return;
+        draggingSeek = true;
+        const max = Number(event.target.max) || 0;
+        const pct = max ? (Number(event.target.value) / max) * 100 : 0;
+        event.target.style.setProperty('--seek-progress', `${pct}%`);
+        const current = el('hint-current');
+        if (current) current.textContent = fmtTime(Number(event.target.value));
+      });
+      stageEl.addEventListener('change', (event) => {
+        if (event.target.id !== 'hint-seek') return;
+        draggingSeek = false;
+        const seconds = Number(event.target.value);
+        pendingSeek = seconds;
+        progress = { currentTime: seconds, duration: progress ? progress.duration : 0 };
+        updateHintSeek();
+        send(ws, { type: 'media-seek', seconds });
+      });
+
+      function fmtTime(value) {
+        const total = Math.max(0, Math.floor(Number(value) || 0));
+        return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+      }
 
       const modeButton = (mode, label, active) =>
         `<button data-mode="${mode}" class="${active ? 'active' : ''}">${label}</button>`;
@@ -160,7 +211,74 @@
       function hintButton(m) {
         const data = (m.round && m.round.data) || {};
         if (!data.hint || m.hintRevealed) return '';
-        return '<button class="secondary" id="reveal-hint">Показать подсказку</button>';
+        return `<button class="secondary" id="reveal-hint">${data.hintAudio ? 'Текст на экран' : 'Показать подсказку'}</button>`;
+      }
+
+      function hintAudioBlock(m) {
+        const audio = m.round && m.round.data && m.round.data.hintAudio;
+        if (!audio) return '';
+        const media = m.media && m.media.hint ? m.media : null;
+        const active = media ? media.hintVariant : null;
+        const playing = !!(media && media.playing);
+        const variants = [
+          ['instrumental', 'Без слов'],
+          ['vocal', 'Со словами'],
+        ].filter(([key]) => audio[key]);
+        const duration = progress ? progress.duration : 0;
+        const current = progress ? (duration ? Math.min(progress.currentTime, duration) : progress.currentTime) : 0;
+        return `
+          <div class="hint-audio" role="group" aria-labelledby="hint-audio-label">
+            <div class="hint-audio-head">
+              <span class="hint-audio-label" id="hint-audio-label">
+                <span class="media-eq ${playing ? 'is-playing' : 'is-paused'}" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                Подсказка · аудио
+              </span>
+              <span class="hint-audio-state">${
+                media
+                  ? `${playing ? 'Играет' : 'Пауза'} · ${active === 'instrumental' ? 'без слов' : 'со словами'}`
+                  : 'Включите вариант для зала'
+              }</span>
+            </div>
+            <div class="hint-audio-row">
+              ${variants
+                .map(([key, label]) => {
+                  const isActive = active === key;
+                  return `<button class="hint-audio-btn${isActive ? ' is-active' : ''}" data-hint="${key}" aria-pressed="${isActive}">
+                    ${isActive && playing ? ICON_PAUSE : ICON_PLAY}<span>${label}</span>
+                  </button>`;
+                })
+                .join('')}
+              ${media ? `<button class="hint-audio-stop" data-media="skip">${ICON_STOP}<span>Стоп</span></button>` : ''}
+            </div>
+            ${
+              media
+                ? `<div class="hint-seek">
+                    <span class="hint-time" id="hint-current">${fmtTime(current)}</span>
+                    <input id="hint-seek" type="range" min="0" max="${duration}" step="0.1" value="${current}" aria-label="Перемотка подсказки" ${duration ? '' : 'disabled'} />
+                    <span class="hint-time" id="hint-total">${fmtTime(duration)}</span>
+                  </div>`
+                : ''
+            }
+          </div>`;
+      }
+
+      function updateHintSeek() {
+        const slider = el('hint-seek');
+        if (!slider) return;
+        const duration = progress ? progress.duration : 0;
+        const current = progress ? progress.currentTime : 0;
+        slider.max = String(duration || 0);
+        slider.disabled = !duration;
+        if (!draggingSeek && pendingSeek == null) {
+          slider.value = String(duration ? Math.min(current, duration) : current);
+        }
+        const shown = draggingSeek ? Number(slider.value) : current;
+        const pct = duration ? Math.min(100, (shown / duration) * 100) : 0;
+        slider.style.setProperty('--seek-progress', `${pct}%`);
+        const currentLabel = el('hint-current');
+        if (currentLabel) currentLabel.textContent = fmtTime(shown);
+        const totalLabel = el('hint-total');
+        if (totalLabel) totalLabel.textContent = fmtTime(duration);
       }
 
       function answerStatus(m) {
@@ -186,6 +304,8 @@
         '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10a7.8 7.8 0 1 1 2.1 6.6"/><path d="M4.2 4.8v5.4h5.4"/></svg>';
       const ICON_SKIP =
         '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.5 14 12l-9 6.5z" fill="currentColor" stroke="none"/><path d="M17.5 5v14"/></svg>';
+      const ICON_STOP =
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor"/></svg>';
 
       function mediaLabel(media) {
         const raw = String((media && media.title) || '').trim();
@@ -198,7 +318,7 @@
 
       function renderMediaBar(m) {
         const bar = el('media-bar');
-        if (!m.media || (m.phase !== 'round' && m.phase !== 'reveal')) {
+        if (!m.media || m.media.hint || (m.phase !== 'round' && m.phase !== 'reveal')) {
           bar.classList.add('hidden');
           bar.innerHTML = '';
           return;
@@ -304,6 +424,7 @@
                 <div class="hint">Рисунок на общем экране. Когда все угадали — раскройте ответ.</div>
                 ${answerStatus(m)}
                 ${hostMemo(m)}
+                ${hintAudioBlock(m)}
                 <div class="btn-row">${hintButton(m)}<button class="primary" id="reveal">Показать ответ</button></div>
               </div>`;
             return;
@@ -322,6 +443,7 @@
               </div>
               ${answerStatus(m)}
               ${hostMemo(m)}
+              ${hintAudioBlock(m)}
               <div class="btn-row">${hintButton(m)}<button class="primary" id="reveal">Показать ответ</button></div>
             </div>`;
           return;

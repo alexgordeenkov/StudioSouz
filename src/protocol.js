@@ -184,6 +184,45 @@ export async function handleMessage(party, conn, message, conns = []) {
       break;
     }
 
+    case 'play-hint': {
+      if (!requireHost()) break;
+      try {
+        party.playHintMedia(message.variant);
+        state();
+      } catch (e) {
+        direct({ type: 'error', message: /** @type {Error} */ (e).message });
+      }
+      break;
+    }
+
+    case 'media-seek': {
+      if (!requireHost()) break;
+      party.seekMedia(Number(message.seconds));
+      state();
+      break;
+    }
+
+    case 'media-progress': {
+      if (conn.role !== 'screen') break;
+      if (!party.mediaProgress(String(message.mediaId ?? ''), Number(message.currentTime), Number(message.duration))) {
+        break;
+      }
+      for (const c of conns) {
+        if (c.role !== 'host') continue;
+        effects.push({
+          kind: 'direct',
+          target: c,
+          payload: {
+            type: 'media-progress',
+            mediaId: message.mediaId,
+            currentTime: Number(message.currentTime),
+            duration: Number(message.duration),
+          },
+        });
+      }
+      break;
+    }
+
     case 'draw': {
       if (conn.role !== 'controller' || conn.participantId !== party.drawerId) {
         direct({ type: 'error', message: 'Рисует только выбранный участник' });

@@ -23,6 +23,9 @@ const mediaResolver = createMediaResolver({ search: searchYouTube, listLocal });
 
 const party = new Party({ code: process.env.CODE || 'SOUZ', experiments, mediaResolver, episodes });
 
+// shortcut: список локальных MP3 читается на старте; после добавления файлов сервер нужно перезапустить.
+party.setLocalAudio((await listLocal()).map((file) => file.name));
+
 /**
  * @param {string} file
  * @returns {string}

@@ -19,7 +19,7 @@
     <div id="sound-status" class="sound-status hidden" role="status"></div>
 
     <script type="module">
-      import { el, esc, connect, loadConfig, drawStroke, redrawCanvas } from '/client.js';
+      import { el, esc, connect, send, loadConfig, drawStroke, redrawCanvas } from '/client.js';
 
       let joinUrl = '';
       let state = null;
@@ -29,7 +29,7 @@
         if (state) render(state);
       });
 
-      connect('screen', {
+      const ws = connect('screen', {
         state: (m) => {
           state = m;
           render(m);
@@ -48,6 +48,7 @@
       let ytFrame = null;
       let audioEl = null;
       let lastRestartToken = 0;
+      let lastSeekToken = 0;
       let soundUnlocked = false;
       let soundStatusTimer = 0;
 
@@ -181,16 +182,31 @@
               <div class="audio-now">
                 <span class="audio-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
                 <span class="audio-now-text">
-                  <b>${media.reveal ? 'Правильный ответ' : 'Звучит трек'}</b>
+                  <b>${media.reveal ? 'Правильный ответ' : media.hint ? 'Подсказка' : 'Звучит трек'}</b>
                   <span>${media.reveal ? 'Слушайте полную версию' : 'Слушайте и угадывайте'}</span>
                 </span>
                 <audio src="${esc(media.localUrl)}" ${media.playing ? 'autoplay' : ''} ${media.muted ? 'muted' : ''}></audio>
               </div>`;
             audioEl = layer.querySelector('audio');
+            if (audioEl) {
+              const mediaId = media.id;
+              const report = () => {
+                if (!mediaId || !Number.isFinite(audioEl.duration)) return;
+                send(ws, {
+                  type: 'media-progress',
+                  mediaId,
+                  currentTime: audioEl.currentTime,
+                  duration: audioEl.duration,
+                });
+              };
+              audioEl.addEventListener('timeupdate', report);
+              audioEl.addEventListener('loadedmetadata', report);
+            }
             if (media.playing) playAudio();
             ytFrame = null;
           }
           lastRestartToken = media.restartToken ?? 0;
+          lastSeekToken = media.seekToken ?? 0;
         } else if ((media.restartToken ?? 0) !== lastRestartToken) {
           lastRestartToken = media.restartToken ?? 0;
           if (media.source === 'youtube' && ytFrame) {
@@ -205,6 +221,22 @@
           } else if (media.source === 'local' && audioEl) {
             audioEl.currentTime = 0;
             audioEl.play().catch(() => {});
+          }
+        } else if ((media.seekToken ?? 0) !== lastSeekToken) {
+          lastSeekToken = media.seekToken ?? 0;
+          const seconds = Math.max(0, Number(media.seekTo) || 0);
+          if (media.source === 'local' && audioEl) {
+            const seek = () => {
+              audioEl.currentTime = seconds;
+              if (media.playing) audioEl.play().catch(() => {});
+            };
+            if (audioEl.readyState >= 1) seek();
+            else audioEl.addEventListener('loadedmetadata', seek, { once: true });
+          } else if (media.source === 'youtube' && ytFrame) {
+            ytFrame.contentWindow.postMessage(
+              JSON.stringify({ event: 'command', func: 'seekTo', args: [seconds, true] }),
+              '*'
+            );
           }
         } else if (media.source === 'youtube' && ytFrame) {
           ytFrame.contentWindow.postMessage(
