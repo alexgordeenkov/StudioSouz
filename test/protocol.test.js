@@ -225,6 +225,7 @@ test('a disconnected participant can rejoin with the same id', async () => {
   assert.equal(b.participantId, id);
   assert.ok(effects.some((e) => e.payload.type === 'joined'));
   assert.equal(party.getState().participants[0].connected, true);
+  assert.equal(party.getState().participants.length, 1);
 });
 
 test('host selects an episode and the state carries available experiments', async () => {
