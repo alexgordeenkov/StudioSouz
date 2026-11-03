@@ -27,6 +27,7 @@ function isCorrect(round, value) {
  * @property {string} [text] многострочный искажённый текст
  * @property {string} [prompt]
  * @property {string} [mediaTitle]
+ * @property {string[]} [options]
  * @property {string} answer
  * @property {string[]} [accept]
  */
@@ -63,6 +64,16 @@ export const retranslation = {
   name: 'Переперевод',
   kind: 'quiz',
   rules: 'Песня переведена туда-обратно через другой язык. Угадайте оригинал.',
+  rounds: [],
+  isCorrect,
+};
+
+/** @type {import('../party.js').Experiment<ShowGameRound>} */
+export const rhymeBall = {
+  id: 'rhyme-ball',
+  name: 'Рифмобол',
+  kind: 'quiz',
+  rules: 'Звучит фрагмент песни без последней строки. Выберите, чем он заканчивается.',
   rounds: [],
   isCorrect,
 };

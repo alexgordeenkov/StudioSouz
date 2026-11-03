@@ -162,6 +162,21 @@ test('episode 12 carries perepesnya rounds only', () => {
   }
 });
 
+test('episode 39 carries perepesnya and rhyme-ball rounds', () => {
+  const pack = episodes.find((e) => e.id === 's3e39');
+  assert.ok(pack);
+  assert.equal(pack.season, 3);
+  assert.equal(pack.number, 39);
+  assert.equal(pack.rounds['song-about-song'].length, 2);
+  assert.equal(pack.rounds['rhyme-ball'].length, 4);
+  for (const round of pack.rounds['rhyme-ball']) {
+    assert.ok(round.prompt);
+    assert.ok(round.media?.localFile);
+    assert.ok(round.revealMedia?.localFile);
+    assert.ok(round.options.includes(round.answer));
+  }
+});
+
 test('all shipped content rounds provide hints', () => {
   for (const pack of episodes) {
     for (const [exp, rounds] of Object.entries(pack.rounds)) {

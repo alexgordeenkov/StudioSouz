@@ -260,6 +260,7 @@ export async function handleMessage(party, conn, message, conns = []) {
       if (!requireHost()) break;
       try {
         party.revealRound();
+        await party.autoPlayRevealMedia().catch(() => {});
         state();
       } catch (e) {
         direct({ type: 'error', message: /** @type {Error} */ (e).message });

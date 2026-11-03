@@ -198,7 +198,7 @@
 
       function renderMediaBar(m) {
         const bar = el('media-bar');
-        if (!m.media || m.phase !== 'round') {
+        if (!m.media || (m.phase !== 'round' && m.phase !== 'reveal')) {
           bar.classList.add('hidden');
           bar.innerHTML = '';
           return;

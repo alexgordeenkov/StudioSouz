@@ -193,6 +193,43 @@ test('revealing a round clears the media layer', async () => {
   assert.equal(party.getState().media, null);
 });
 
+test('a round reveal can play the full version and clears it on results', async () => {
+  const mediaExp = {
+    id: 'media',
+    name: 'Медиа',
+    rules: '',
+    rounds: [
+      {
+        media: { localFile: 'short' },
+        revealMedia: { localFile: 'full' },
+        answer: 'A',
+        accept: ['a'],
+      },
+    ],
+    isCorrect(/** @type {any} */ round, /** @type {string} */ value) {
+      return norm(value) === 'a';
+    },
+  };
+  const resolver = {
+    resolve: async (/** @type {any} */ req) => ({
+      source: 'local',
+      localUrl: `/${req.localFile}.mp3`,
+      title: req.localFile,
+    }),
+  };
+  const party = new Party({ code: 'ABCD', experiments: { media: mediaExp }, mediaResolver: resolver });
+  party.selectExperiment('media');
+  party.startRound();
+  await party.autoPlayRoundMedia();
+  assert.equal(party.getState().media?.localUrl, '/short.mp3');
+  party.revealRound();
+  await party.autoPlayRevealMedia();
+  assert.equal(party.getState().media?.localUrl, '/full.mp3');
+  assert.equal(party.getState().media?.reveal, true);
+  party.nextRound();
+  assert.equal(party.getState().media, null);
+});
+
 const drawExp = {
   id: 'draw',
   name: 'Рисуй',
