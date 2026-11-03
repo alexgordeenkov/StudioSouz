@@ -167,6 +167,32 @@ test('media can be played, paused, resumed and skipped', async () => {
   assert.equal(party.getState().media, null);
 });
 
+test('revealing a round clears the media layer', async () => {
+  const mediaExp = {
+    id: 'media',
+    name: 'Медиа',
+    rules: '',
+    rounds: [{ media: { localFile: 'x' }, answer: 'A', accept: ['a'] }],
+    isCorrect(/** @type {any} */ round, /** @type {string} */ value) {
+      return norm(value) === 'a';
+    },
+  };
+  const resolver = {
+    resolve: async (/** @type {any} */ req) => ({
+      source: 'local',
+      localUrl: '/x.mp3',
+      title: req.localFile,
+    }),
+  };
+  const party = new Party({ code: 'ABCD', experiments: { media: mediaExp }, mediaResolver: resolver });
+  party.selectExperiment('media');
+  party.startRound();
+  await party.autoPlayRoundMedia();
+  assert.ok(party.getState().media);
+  party.revealRound();
+  assert.equal(party.getState().media, null);
+});
+
 const drawExp = {
   id: 'draw',
   name: 'Рисуй',

@@ -333,6 +333,7 @@ export class Party {
       results,
       firstCorrectId: firstCorrect ? firstCorrect.id : null,
     };
+    this.media = null;
     this.phase = 'reveal';
     return this.reveal;
   }
