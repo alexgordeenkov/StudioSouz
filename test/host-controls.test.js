@@ -31,6 +31,19 @@ test('host sees the answer and hint during a round, players do not', () => {
   assert.equal(hostState.round.data.hint, 'Подсказка');
 });
 
+test('host sees who has answered, players do not', () => {
+  const party = makeParty();
+  const a = party.addParticipant('A');
+  const b = party.addParticipant('B');
+  party.selectExperiment('quiz');
+  party.startRound();
+
+  assert.deepEqual(party.getState({ forHost: true }).answeredIds, []);
+  party.submitAnswer(a.id, 'Ответ');
+  assert.deepEqual(party.getState({ forHost: true }).answeredIds, [a.id]);
+  assert.equal('answeredIds' in party.getState(), false);
+});
+
 test('revealing a hint exposes it to everyone once', () => {
   const party = makeParty();
   party.selectExperiment('quiz');

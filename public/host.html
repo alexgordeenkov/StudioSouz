@@ -163,6 +163,21 @@
         return '<button class="secondary" id="reveal-hint">Показать подсказку</button>';
       }
 
+      function answerStatus(m) {
+        if (!m.participants.length) return '';
+        const answered = new Set(m.answeredIds || []);
+        return `<ul class="answer-status">
+          ${m.participants
+            .map(
+              (p) => `<li class="${answered.has(p.id) ? 'done' : ''}">
+                <span>${esc(p.name)}</span>
+                <b>${answered.has(p.id) ? 'ответил' : 'ждём'}</b>
+              </li>`
+            )
+            .join('')}
+        </ul>`;
+      }
+
       const ICON_PLAY =
         '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.2v13.6L19 12z" fill="currentColor"/></svg>';
       const ICON_PAUSE =
@@ -287,6 +302,7 @@
                   <span class="answers-count">Ответов: ${m.answersCount} из ${m.participants.length}</span>
                 </div>
                 <div class="hint">Рисунок на общем экране. Когда все угадали — раскройте ответ.</div>
+                ${answerStatus(m)}
                 ${hostMemo(m)}
                 <div class="btn-row">${hintButton(m)}<button class="primary" id="reveal">Показать ответ</button></div>
               </div>`;
@@ -304,6 +320,7 @@
               <div class="collage small">
                 ${m.round.data.image ? `<img src="${esc(m.round.data.image)}" alt="Коллаж" />` : '<div class="hint">Задание на общем экране</div>'}
               </div>
+              ${answerStatus(m)}
               ${hostMemo(m)}
               <div class="btn-row">${hintButton(m)}<button class="primary" id="reveal">Показать ответ</button></div>
             </div>`;

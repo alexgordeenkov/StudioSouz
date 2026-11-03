@@ -470,6 +470,7 @@ export class Party {
       reveal: this.reveal,
       hintRevealed: this.hintRevealed,
       answersCount: this.answers.size,
+      ...(forHost ? { answeredIds: [...this.answers.keys()] } : {}),
       speedBonus: this.speedBonus,
       media: this.media,
       drawerId: this.drawerId,
