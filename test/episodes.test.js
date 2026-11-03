@@ -172,6 +172,7 @@ test('episode 39 carries perepesnya and rhyme-ball rounds', () => {
   for (const round of pack.rounds['rhyme-ball']) {
     assert.ok(round.prompt);
     assert.ok(round.media?.localFile);
+    assert.ok(round.revealMedia?.localFile);
     assert.ok(round.options.includes(round.answer));
   }
 });

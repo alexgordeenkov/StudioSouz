@@ -56,7 +56,7 @@
         const layer = el('media');
         const media = m.media;
         if (!media) {
-          layer.classList.remove('active', 'audio-only');
+          layer.classList.remove('active', 'audio-only', 'reveal-audio');
           if (mediaKey) {
             layer.innerHTML = '';
             mediaKey = null;
@@ -67,7 +67,8 @@
         }
         layer.classList.add('active');
         layer.classList.toggle('audio-only', media.source === 'local');
-        const key = media.source + ':' + (media.youtubeId || media.localUrl);
+        layer.classList.toggle('reveal-audio', !!media.reveal);
+        const key = media.source + ':' + (media.youtubeId || media.localUrl) + (media.reveal ? ':reveal' : '');
         if (key !== mediaKey) {
           mediaKey = key;
           if (media.source === 'youtube') {
@@ -83,12 +84,13 @@
               <div class="audio-now">
                 <span class="audio-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
                 <span class="audio-now-text">
-                  <b>Звучит трек</b>
-                  <span>Слушайте и угадывайте</span>
+                  <b>${media.reveal ? 'Правильный ответ' : 'Звучит трек'}</b>
+                  <span>${media.reveal ? 'Слушайте полную версию' : 'Слушайте и угадывайте'}</span>
                 </span>
                 <audio src="${esc(media.localUrl)}" ${media.playing ? 'autoplay' : ''} ${media.muted ? 'muted' : ''}></audio>
               </div>`;
             audioEl = layer.querySelector('audio');
+            if (media.playing) audioEl.play().catch(() => {});
             ytFrame = null;
           }
           lastRestartToken = media.restartToken ?? 0;

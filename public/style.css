@@ -1537,6 +1537,30 @@ body.screen .media-layer.audio-only {
   justify-content: center;
 }
 
+body.screen .media-layer.audio-only.reveal-audio {
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 10vh 3vw 0 0;
+}
+
+body.screen .media-layer.audio-only.reveal-audio .audio-now {
+  padding: 10px 16px;
+  gap: 12px;
+}
+
+body.screen .media-layer.audio-only.reveal-audio .audio-eq {
+  height: 34px;
+  width: 34px;
+}
+
+body.screen .media-layer.audio-only.reveal-audio .audio-now-text b {
+  font-size: clamp(16px, 1.6vw, 26px);
+}
+
+body.screen .media-layer.audio-only.reveal-audio .audio-now-text span {
+  font-size: clamp(12px, 1vw, 16px);
+}
+
 body.screen .audio-now {
   padding: 26px 40px;
   gap: 20px;

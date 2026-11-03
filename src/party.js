@@ -344,6 +344,7 @@ export class Party {
   nextRound() {
     if (!this.experiment) throw new Error('Нет эксперимента');
     if (this.roundIndex + 1 >= this.experiment.rounds.length) {
+      this.media = null;
       this.phase = 'results';
       return { finished: true };
     }
@@ -370,6 +371,7 @@ export class Party {
   }
 
   finishParty() {
+    this.media = null;
     this.phase = 'winner';
   }
 
@@ -430,6 +432,19 @@ export class Party {
       title: ref.label ?? media.title,
       playing: true,
       muted: !!(r.muted ?? ref.muted),
+    };
+  }
+
+  async autoPlayRevealMedia() {
+    const round = this.experiment ? this.experiment.rounds[this.roundIndex] : null;
+    const ref = round && /** @type {any} */ (round).revealMedia;
+    if (!ref || !this.mediaResolver) return;
+    const media = await this.mediaResolver.resolve(ref);
+    this.media = {
+      ...media,
+      title: ref.label ?? media.title,
+      playing: true,
+      reveal: true,
     };
   }
 

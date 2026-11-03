@@ -229,6 +229,7 @@ export const episodes = [
       'rhyme-ball': [
         {
           media: { localFile: 'rifmobol-babushka', label: 'Рифмобол — бабушка' },
+          revealMedia: { localFile: 'rifmobol-babushka-full', label: 'Рифмобол — бабушка (полная версия)' },
           prompt: 'Чем заканчивается песня?',
           options: [
             'Оператор электронно-вычислительного машиностроения',
@@ -241,6 +242,7 @@ export const episodes = [
         },
         {
           media: { localFile: 'rifmobol-tovarishch', label: 'Рифмобол — верный товарищ' },
+          revealMedia: { localFile: 'rifmobol-tovarishch-full', label: 'Рифмобол — верный товарищ (полная версия)' },
           prompt: 'Чем заканчивается песня?',
           options: ['Дикобраз', 'Гондурас', 'Унитаз', 'Голубой'],
           answer: 'Унитаз',
@@ -248,6 +250,7 @@ export const episodes = [
         },
         {
           media: { localFile: 'rifmobol-sultan', label: 'Рифмобол — султан' },
+          revealMedia: { localFile: 'rifmobol-sultan-full', label: 'Рифмобол — султан (полная версия)' },
           prompt: 'Чем заканчивается песня?',
           options: ['Дикобраз', 'Гондурас', 'Унитаз', 'Голубой'],
           answer: 'Унитаз',
@@ -255,6 +258,7 @@ export const episodes = [
         },
         {
           media: { localFile: 'rifmobol-goluboy', label: 'Рифмобол — голубой' },
+          revealMedia: { localFile: 'rifmobol-goluboy-full', label: 'Рифмобол — голубой (полная версия)' },
           prompt: 'Чем заканчивается песня?',
           options: ['Контрабас', 'Маракас', 'Тарантас', 'Унитаз'],
           answer: 'Унитаз',
