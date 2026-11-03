@@ -34,6 +34,15 @@ test('resolve falls back to a local MP3 when youtube search fails', async () => 
   assert.equal(media.localUrl, '/media/audio/soyuz.mp3');
 });
 
+test('resolve prefers an exact local file over a longer prefix match', async () => {
+  const locals = [
+    { name: 'track-full', url: '/media/audio/track-full.mp3' },
+    { name: 'track', url: '/media/audio/track.mp3' },
+  ];
+  const media = await resolverWith(null, locals).resolve({ localFile: 'track' });
+  assert.equal(media.localUrl, '/media/audio/track.mp3');
+});
+
 test('resolve throws when nothing is available', async () => {
   await assert.rejects(() => resolverWith(null, []).resolve({ title: 'Нет такого' }), /не найдено/);
 });

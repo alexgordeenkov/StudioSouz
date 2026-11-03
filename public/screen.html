@@ -62,7 +62,15 @@
         soundStatus.textContent = text;
         soundStatus.classList.toggle('hidden', !text);
         window.clearTimeout(soundStatusTimer);
-        if (text) soundStatusTimer = window.setTimeout(() => soundStatus.classList.add('hidden'), 3500);
+        if (text) soundStatusTimer = window.setTimeout(() => soundStatus.classList.add('hidden'), 5000);
+      }
+
+      function audioErrorText(error) {
+        const name = error && error.name;
+        if (name === 'NotAllowedError') return 'Браузер блокирует автоплей';
+        if (name === 'NotSupportedError') return 'ТВ не поддерживает этот аудиоформат';
+        if (name === 'NotReadableError' || name === 'NetworkError') return 'Не удалось загрузить аудио с ПК';
+        return 'Ошибка аудио: ' + (name || 'unknown');
       }
 
       function playAudio() {
@@ -71,9 +79,10 @@
         if (soundUnlocked) {
           el.muted = false;
           el.volume = 1;
-          el.play().catch(() => {
+          el.play().catch((error) => {
             soundUnlocked = false;
             showSoundUnlock(true);
+            showSoundStatus(audioErrorText(error));
           });
           return;
         }
@@ -93,7 +102,10 @@
               }
             }, 1200);
           })
-          .catch(() => showSoundUnlock(true));
+          .catch((error) => {
+            showSoundUnlock(true);
+            showSoundStatus(audioErrorText(error));
+          });
       }
 
       function unlockSound() {
@@ -114,10 +126,10 @@
         audioEl
           .play()
           .then(() => showSoundStatus('Звук включён'))
-          .catch(() => {
+          .catch((error) => {
             soundUnlocked = false;
             showSoundUnlock(true);
-            showSoundStatus('Не удалось включить звук. Проверьте громкость ТВ.');
+            showSoundStatus(audioErrorText(error));
           });
       }
 

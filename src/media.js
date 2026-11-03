@@ -81,7 +81,8 @@ export function createMediaResolver({ search, listLocal }) {
 
       const locals = await listLocal();
       const wanted = String(request.localFile ?? title).trim();
-      const match = locals.find((file) => nameMatches(file.name, wanted));
+      const exact = locals.find((file) => file.name === wanted);
+      const match = exact ?? locals.find((file) => nameMatches(file.name, wanted));
       if (match) return { source: 'local', localUrl: match.url, title: title || match.name };
 
       throw new Error('Медиа не найдено');

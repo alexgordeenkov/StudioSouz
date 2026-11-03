@@ -1568,11 +1568,11 @@ body.screen .totals {
 
 body.screen .media-layer.audio-only {
   inset: 0;
-  padding: 0;
+  padding: 0 3vw 4vh 0;
   background: transparent;
   pointer-events: none;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-end;
+  justify-content: flex-end;
 }
 
 body.screen .media-layer.audio-only.reveal-audio {
