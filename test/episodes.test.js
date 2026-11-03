@@ -189,6 +189,19 @@ test('family episode carries the generated games', () => {
     assert.ok(round.text);
     assert.ok(round.options.includes(round.answer));
   }
+
+  const allSongs = [...pack.rounds['lyric-quiz'], ...pack.rounds['artist-quiz'], ...pack.rounds['draw-song']].map(
+    (round) => round.answer.toLowerCase()
+  );
+  assert.equal(new Set(allSongs).size, allSongs.length, 'песни повторяются между играми');
+
+  for (const round of pack.rounds['lyric-quiz']) {
+    assert.equal(
+      round.text.toLowerCase().includes(round.answer.toLowerCase()),
+      false,
+      `в строке есть название песни: ${round.answer}`
+    );
+  }
 });
 
 test('all shipped content rounds provide hints', () => {
