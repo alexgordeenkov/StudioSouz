@@ -40,6 +40,10 @@
       let drawRenderKey = null;
 
       const ws = connect('controller', {
+        open: () => {
+          const saved = localStorage.getItem('souz-id');
+          if (saved) send(ws, { type: 'rejoin', participantId: saved });
+        },
         joined: (m) => {
           me = m.participantId;
           localStorage.setItem('souz-id', m.participantId);
@@ -70,9 +74,6 @@
           if (drawerCanvas) redrawCanvas(drawerCanvas, m.strokes);
         },
       });
-
-      const savedId = localStorage.getItem('souz-id');
-      if (savedId) send(ws, { type: 'rejoin', participantId: savedId });
 
       el('join').addEventListener('submit', (event) => {
         event.preventDefault();

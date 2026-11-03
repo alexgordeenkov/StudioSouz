@@ -9,22 +9,88 @@ export const wsUrl = (role) =>
 
 /**
  * Подключается к серверу и раздаёт сообщения по обработчикам.
+ * Переподключается сам; на время обрыва показывает баннер.
  * @param {string} role
- * @param {Record<string, (msg: any, ws: WebSocket) => void>} handlers
+ * @param {Record<string, (msg: any, ws: any) => void>} handlers
  */
 export function connect(role, handlers) {
-  const ws = new WebSocket(wsUrl(role));
-  ws.onmessage = (event) => {
-    let msg;
-    try {
-      msg = JSON.parse(event.data);
-    } catch {
-      return;
+  /** @type {WebSocket | null} */
+  let socket = null;
+  let retry = 0;
+  let timer = 0;
+  let stopped = false;
+  /** @type {Set<() => void>} */
+  const openListeners = new Set();
+
+  /** @type {any} */
+  let client;
+
+  const status = (/** @type {string} */ text) => {
+    let node = document.getElementById('connection');
+    if (!node) {
+      node = document.createElement('div');
+      node.id = 'connection';
+      node.setAttribute('role', 'status');
+      document.body.appendChild(node);
     }
-    const handler = handlers[msg.type];
-    if (handler) handler(msg, ws);
+    node.textContent = text;
+    node.classList.toggle('hidden', !text);
   };
-  return ws;
+
+  const open = () => {
+    if (stopped) return;
+    socket = new WebSocket(wsUrl(role));
+    socket.onopen = () => {
+      retry = 0;
+      status('');
+      if (handlers.open) handlers.open({}, client);
+      for (const fn of openListeners) fn();
+      openListeners.clear();
+    };
+    socket.onmessage = (event) => {
+      let msg;
+      try {
+        msg = JSON.parse(event.data);
+      } catch {
+        return;
+      }
+      const handler = handlers[msg.type];
+      if (handler) handler(msg, client);
+    };
+    socket.onclose = () => {
+      if (stopped) return;
+      status('Связь потеряна. Переподключаемся…');
+      timer = window.setTimeout(open, Math.min(1000 * 2 ** retry++, 5000));
+    };
+    socket.onerror = () => socket && socket.close();
+  };
+
+  client = {
+    get readyState() {
+      return socket ? socket.readyState : WebSocket.CONNECTING;
+    },
+    /** @param {string} data */
+    send(data) {
+      if (socket && socket.readyState === WebSocket.OPEN) socket.send(data);
+    },
+    /**
+     * @param {string} type
+     * @param {() => void} fn
+     */
+    addEventListener(type, fn) {
+      if (type !== 'open') return;
+      if (socket && socket.readyState === WebSocket.OPEN) fn();
+      else openListeners.add(fn);
+    },
+    close() {
+      stopped = true;
+      window.clearTimeout(timer);
+      if (socket) socket.close();
+    },
+  };
+
+  open();
+  return client;
 }
 
 /**
