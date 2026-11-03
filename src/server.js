@@ -108,8 +108,38 @@ const server = http.createServer(async (req, res) => {
   const full = path.join(PUBLIC_DIR, filePath);
   try {
     const data = await readFile(full);
-    res.writeHead(200, { 'content-type': contentType(full), 'cache-control': 'no-store' });
-    res.end(data);
+    const size = data.length;
+    const type = contentType(full);
+    const range = req.headers.range;
+    const match = range ? /^bytes=(\d*)-(\d*)$/.exec(range) : null;
+
+    if (match) {
+      let start = match[1] ? Number(match[1]) : 0;
+      let end = match[2] ? Number(match[2]) : size - 1;
+      if (!Number.isFinite(start) || !Number.isFinite(end) || start > end || start >= size) {
+        res.writeHead(416, { 'content-range': `bytes */${size}` });
+        res.end();
+        return;
+      }
+      end = Math.min(end, size - 1);
+      res.writeHead(206, {
+        'content-type': type,
+        'content-range': `bytes ${start}-${end}/${size}`,
+        'content-length': end - start + 1,
+        'accept-ranges': 'bytes',
+        'cache-control': 'no-store',
+      });
+      res.end(req.method === 'HEAD' ? undefined : data.subarray(start, end + 1));
+      return;
+    }
+
+    res.writeHead(200, {
+      'content-type': type,
+      'content-length': size,
+      'accept-ranges': 'bytes',
+      'cache-control': 'no-store',
+    });
+    res.end(req.method === 'HEAD' ? undefined : data);
   } catch {
     res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
     res.end('Not found');
