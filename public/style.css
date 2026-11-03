@@ -700,6 +700,23 @@ button.primary:active {
   background: rgba(246, 196, 69, 0.14);
 }
 
+.menu-item.primary-exp {
+  border-color: rgba(255, 244, 226, 0.4);
+  background: linear-gradient(180deg, var(--gold), var(--gold-2));
+  color: var(--ink);
+  box-shadow:
+    0 5px 0 rgba(90, 45, 0, 0.5),
+    inset 0 1px 0 rgba(255, 244, 226, 0.5);
+}
+
+.menu-item.primary-exp:hover {
+  background: linear-gradient(180deg, #ffd35c, var(--gold));
+}
+
+.menu-item.primary-exp .mi-count {
+  color: rgba(27, 13, 5, 0.72);
+}
+
 .mi-name {
   font-family: var(--display);
   text-transform: uppercase;
@@ -718,6 +735,22 @@ button.primary:active {
 
 .episode-picker {
   margin: 8px 0 14px;
+}
+
+.episode-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.episode-current {
+  color: var(--gold);
+  font-family: var(--display);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .season-block {
@@ -750,8 +783,10 @@ button.primary:active {
 }
 
 .episode-list button.active {
-  background: linear-gradient(180deg, rgba(246, 196, 69, 0.22), rgba(246, 196, 69, 0.08));
+  background: var(--gold);
   border-color: var(--gold);
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .drawer-picker {

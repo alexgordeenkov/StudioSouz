@@ -90,16 +90,37 @@
       const modeButton = (mode, label, active) =>
         `<button data-mode="${mode}" class="${active ? 'active' : ''}">${label}</button>`;
 
+      function roundsLabel(n) {
+        const mod10 = n % 10;
+        const mod100 = n % 100;
+        const word =
+          mod10 === 1 && mod100 !== 11
+            ? 'раунд'
+            : mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)
+              ? 'раунда'
+              : 'раундов';
+        return `${n} ${word}`;
+      }
+
       function episodePicker(m) {
         const seasons = [...new Set(m.episodes.map((e) => e.season))].sort((a, b) => a - b);
-        return seasons
-          .map(
-            (season) => `
+        const current = m.episode
+          ? `Сезон ${m.episode.season} · Выпуск ${m.episode.number}`
+          : 'Не выбран';
+        return `
+          <div class="episode-head">
+            <span class="label">Выпуск</span>
+            <b class="episode-current">${esc(current)}</b>
+          </div>
+          ${seasons
+            .map(
+              (season) => `
               <div class="season-block">
                 <div class="season-title">Сезон ${season}</div>
                 <div class="episode-list">
                   ${m.episodes
                     .filter((e) => e.season === season)
+                    .sort((a, b) => a.number - b.number)
                     .map(
                       (e) =>
                         `<button data-episode="${esc(e.id)}" class="${m.episode && m.episode.id === e.id ? 'active' : ''}">Выпуск ${e.number}</button>`
@@ -107,8 +128,8 @@
                     .join('')}
                 </div>
               </div>`
-          )
-          .join('');
+            )
+            .join('')}`;
       }
 
       function drawerPicker(m) {
@@ -227,9 +248,9 @@
                 <div class="experiment-menu">
                   ${m.availableExperiments
                     .map(
-                      (e) => `<button class="menu-item" data-exp="${esc(e.id)}">
-                        <span class="mi-name">${esc(e.name)}</span>
-                        <span class="mi-count">${e.rounds} раундов</span>
+                      (e) => `<button class="menu-item primary-exp" data-exp="${esc(e.id)}">
+                        <span class="mi-name">Начать «${esc(e.name)}»</span>
+                        <span class="mi-count">${roundsLabel(e.rounds)}</span>
                       </button>`
                     )
                     .join('')}
