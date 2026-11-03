@@ -180,7 +180,9 @@
           const options = m.round.data.options;
           const picture = m.round.data.image
             ? `<div class="collage small phone-collage"><img src="${esc(m.round.data.image)}" alt="Коллаж" /></div>`
-            : '<div class="hint">Смотрите на общий экран</div>';
+            : m.round.data.prompt
+              ? ''
+              : '<div class="hint">Смотрите на общий экран</div>';
           const answerArea = submitted
             ? '<div class="accepted">Ответ принят</div>'
             : options

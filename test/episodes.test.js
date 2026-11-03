@@ -157,6 +157,9 @@ test('episode 12 carries perepesnya rounds only', () => {
   assert.equal(pack.rounds['song-about-song'].length, 3);
   assert.equal('who-did-this' in pack.rounds, false);
   assert.equal('three-tracks' in pack.rounds, false);
+  for (const round of pack.rounds['song-about-song']) {
+    assert.ok(round.prompt, 's3e12 round without prompt');
+  }
 });
 
 test('all shipped content rounds provide hints', () => {
