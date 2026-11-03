@@ -107,6 +107,24 @@ h2 {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--cream);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* ---------- Common screen & host ---------- */
 body.wide {
   padding: clamp(18px, 3vw, 48px) clamp(20px, 3vw, 52px)
@@ -171,10 +189,10 @@ body.wide {
 }
 
 .label {
-  color: var(--gold);
+  color: #ffe08a;
   text-transform: uppercase;
   letter-spacing: 0.24em;
-  font-size: clamp(10px, 0.9vw, 14px);
+  font-size: clamp(12px, 0.9vw, 14px);
   font-weight: 800;
 }
 

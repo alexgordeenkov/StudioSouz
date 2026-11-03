@@ -13,7 +13,7 @@
       <button class="secondary lobby-return hidden" id="to-lobby" type="button">В лобби</button>
     </header>
 
-    <main id="stage" class="stage"></main>
+    <main id="stage" class="stage" aria-live="polite"></main>
     <canvas id="draw-canvas" class="draw-canvas hidden" width="900" height="620"></canvas>
 
     <div id="media-bar" class="media-bar hidden" role="region" aria-label="Управление медиа"></div>
@@ -333,8 +333,8 @@
                     (p) => `<span class="total">
                       <span>${esc(p.name)}</span><b>${p.score}</b>
                       <span class="score-adj">
-                        <button class="score-btn" data-score="${esc(p.id)}" data-delta="-1">−1</button>
-                        <button class="score-btn" data-score="${esc(p.id)}" data-delta="1">+1</button>
+                        <button class="score-btn" data-score="${esc(p.id)}" data-delta="-1" aria-label="Минус один балл ${esc(p.name)}">−1</button>
+                        <button class="score-btn" data-score="${esc(p.id)}" data-delta="1" aria-label="Плюс один балл ${esc(p.name)}">+1</button>
                       </span>
                     </span>`
                   )
