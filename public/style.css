@@ -1091,6 +1091,44 @@ button.primary:active {
   text-align: left;
 }
 
+.answer-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.answer-status li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: rgba(255, 244, 226, 0.05);
+  color: var(--cream);
+  font-size: 14px;
+}
+
+.answer-status li b {
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.answer-status li.done {
+  border-color: rgba(92, 210, 130, 0.55);
+  background: rgba(92, 210, 130, 0.12);
+}
+
+.answer-status li.done b {
+  color: #9be4b4;
+}
+
 .memo-row {
   display: flex;
   gap: 10px;
