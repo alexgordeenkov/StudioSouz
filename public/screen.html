@@ -15,7 +15,8 @@
     <main id="stage" class="stage" aria-live="polite"></main>
     <canvas id="draw-canvas" class="draw-canvas hidden" width="900" height="620"></canvas>
     <div id="media" class="media-layer"></div>
-    <button id="sound-unlock" class="sound-unlock" type="button">Включить звук</button>
+    <button id="sound-unlock" class="sound-unlock" type="button" autofocus tabindex="0">Включить звук</button>
+    <div id="sound-status" class="sound-status hidden" role="status"></div>
 
     <script type="module">
       import { el, esc, connect, loadConfig, drawStroke, redrawCanvas } from '/client.js';
@@ -47,37 +48,88 @@
       let ytFrame = null;
       let audioEl = null;
       let lastRestartToken = 0;
+      let soundUnlocked = false;
+      let soundStatusTimer = 0;
 
       const soundUnlock = el('sound-unlock');
+      const soundStatus = el('sound-status');
 
       function showSoundUnlock(show) {
         soundUnlock.classList.toggle('hidden', !show);
       }
 
+      function showSoundStatus(text) {
+        soundStatus.textContent = text;
+        soundStatus.classList.toggle('hidden', !text);
+        window.clearTimeout(soundStatusTimer);
+        if (text) soundStatusTimer = window.setTimeout(() => soundStatus.classList.add('hidden'), 3500);
+      }
+
       function playAudio() {
         if (!audioEl) return;
         const el = audioEl;
+        if (soundUnlocked) {
+          el.muted = false;
+          el.volume = 1;
+          el.play().catch(() => {
+            soundUnlocked = false;
+            showSoundUnlock(true);
+          });
+          return;
+        }
         el.muted = true;
+        el.volume = 1;
         const started = el.play();
         if (!started) return;
         started
           .then(() => {
             el.muted = false;
             window.setTimeout(() => {
-              if (el.paused) showSoundUnlock(true);
+              if (el.paused) {
+                soundUnlocked = false;
+                showSoundUnlock(true);
+              } else {
+                soundUnlocked = true;
+              }
             }, 1200);
           })
           .catch(() => showSoundUnlock(true));
       }
 
       function unlockSound() {
+        soundUnlocked = true;
         showSoundUnlock(false);
-        if (!audioEl) return;
+        try {
+          const Ctx = window.AudioContext || window.webkitAudioContext;
+          if (Ctx) new Ctx().resume();
+        } catch {
+          // Web Audio не обязателен — ниже обычный play()
+        }
+        if (!audioEl) {
+          showSoundStatus('Звук включён');
+          return;
+        }
         audioEl.muted = false;
-        audioEl.play().catch(() => showSoundUnlock(true));
+        audioEl.volume = 1;
+        audioEl
+          .play()
+          .then(() => showSoundStatus('Звук включён'))
+          .catch(() => {
+            soundUnlocked = false;
+            showSoundUnlock(true);
+            showSoundStatus('Не удалось включить звук. Проверьте громкость ТВ.');
+          });
       }
 
       soundUnlock.addEventListener('click', unlockSound);
+      soundUnlock.addEventListener('pointerup', unlockSound);
+      soundUnlock.addEventListener('touchend', unlockSound);
+      soundUnlock.addEventListener('keydown', (event) => {
+        event.preventDefault();
+        unlockSound();
+      });
+      document.addEventListener('pointerdown', unlockSound, { once: true });
+      document.addEventListener('touchend', unlockSound, { once: true });
       document.addEventListener('keydown', unlockSound, { once: true });
 
       function promptOverlay(m) {
