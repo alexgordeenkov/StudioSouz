@@ -7,8 +7,8 @@ const quiz = {
   name: 'Квиз',
   rules: '',
   rounds: [
-    { quote: 'Цитата', answer: 'Ответ', hint: 'Подсказка' },
-    { quote: 'Без подсказки', answer: 'Ответ 2' },
+    { prompt: 'Цитата', answer: 'Ответ', hint: 'Подсказка' },
+    { prompt: 'Без подсказки', answer: 'Ответ 2' },
   ],
   isCorrect: () => true,
 };
