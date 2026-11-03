@@ -111,50 +111,34 @@ test('real episode packs cover the show and carry non-empty rounds', () => {
   }
 });
 
-test('episode 1 carries the extracted games from the first show', () => {
+test('episode 1 carries the remaining extracted games', () => {
   const pack = episodes.find((e) => e.id === 's1e1');
   assert.ok(pack);
   assert.equal(pack.rounds['what-is-it'].length, 7);
-  assert.equal(pack.rounds['rap-vs-politics'].length, 6);
   assert.ok(pack.rounds['song-about-song'].length >= 1);
   assert.ok(pack.rounds['degrade-melody'].length >= 2);
-  assert.ok(pack.rounds['who-did-this'].length >= 1);
-
-  for (const round of pack.rounds['rap-vs-politics']) {
-    assert.ok(round.quote);
-    assert.ok(round.options.includes(round.answer));
-  }
-  for (const round of pack.rounds['who-did-this']) {
-    assert.equal(round.muted, true);
-    assert.ok(round.options.includes(round.answer));
-  }
+  assert.equal('rap-vs-politics' in pack.rounds, false);
+  assert.equal('who-did-this' in pack.rounds, false);
 });
 
-test('episode 2 carries all extracted games', () => {
+test('episode 2 carries the remaining extracted games', () => {
   const pack = episodes.find((e) => e.id === 's1e2');
   assert.ok(pack);
   assert.equal(pack.rounds['what-is-it'].length, 10);
   assert.equal(pack.rounds.retranslation.length, 3);
-  assert.equal(pack.rounds['rap-vs-politics'].length, 5);
   assert.equal(pack.rounds['song-about-song'].length, 2);
   assert.equal(pack.rounds['degrade-melody'].length, 3);
-  assert.equal(pack.rounds['who-did-this'].length, 3);
+  assert.equal('rap-vs-politics' in pack.rounds, false);
+  assert.equal('who-did-this' in pack.rounds, false);
   for (const round of pack.rounds.retranslation) {
     assert.ok(round.text);
     assert.ok(round.answer);
-  }
-  for (const round of pack.rounds['rap-vs-politics']) {
-    assert.ok(round.options.includes(round.answer));
   }
   for (const round of pack.rounds['song-about-song']) {
     assert.ok(round.answer);
   }
   for (const round of pack.rounds['degrade-melody']) {
     assert.ok(round.answer);
-  }
-  for (const round of pack.rounds['who-did-this']) {
-    assert.equal(round.muted, true);
-    assert.ok(round.options.includes(round.answer));
   }
 });
 
@@ -165,19 +149,14 @@ test('episode 3 carries draw-song and perepesnya rounds', () => {
   assert.ok(pack.rounds['song-about-song'].length >= 2);
 });
 
-test('episode 12 carries perepesnya and clip rounds', () => {
+test('episode 12 carries perepesnya rounds only', () => {
   const pack = episodes.find((e) => e.id === 's3e12');
   assert.ok(pack);
   assert.equal(pack.season, 3);
   assert.equal(pack.number, 12);
   assert.equal(pack.rounds['song-about-song'].length, 3);
-  assert.equal(pack.rounds['who-did-this'].length, 2);
+  assert.equal('who-did-this' in pack.rounds, false);
   assert.equal('three-tracks' in pack.rounds, false);
-
-  for (const round of pack.rounds['who-did-this']) {
-    assert.equal(round.muted, true);
-    assert.ok(round.options.includes(round.answer));
-  }
 });
 
 test('all shipped content rounds provide hints', () => {
