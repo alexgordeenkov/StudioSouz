@@ -102,7 +102,7 @@ test('real episode packs cover the show and carry non-empty rounds', () => {
   assert.ok(episodes.length >= 3);
   for (const pack of episodes) {
     assert.ok(pack.id);
-    assert.ok(pack.season >= 1);
+    assert.ok(pack.season >= 0);
     assert.ok(pack.number >= 1);
     assert.ok(Object.keys(pack.rounds).length > 0, pack.id + ' has no rounds');
     for (const [exp, rounds] of Object.entries(pack.rounds)) {
@@ -173,6 +173,20 @@ test('episode 39 carries perepesnya and rhyme-ball rounds', () => {
     assert.ok(round.prompt);
     assert.ok(round.media?.localFile);
     assert.ok(round.revealMedia?.localFile);
+    assert.ok(round.options.includes(round.answer));
+  }
+});
+
+test('family episode carries the generated games', () => {
+  const pack = episodes.find((e) => e.id === 'family');
+  assert.ok(pack);
+  assert.equal(pack.season, 0);
+  assert.equal(pack.rounds['lyric-quiz'].length, 8);
+  assert.equal(pack.rounds['artist-quiz'].length, 8);
+  assert.equal(pack.rounds['draw-song'].length, 3);
+  for (const round of [...pack.rounds['lyric-quiz'], ...pack.rounds['artist-quiz']]) {
+    assert.ok(round.prompt);
+    assert.ok(round.text);
     assert.ok(round.options.includes(round.answer));
   }
 });

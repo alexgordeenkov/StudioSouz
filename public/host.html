@@ -104,9 +104,7 @@
 
       function episodePicker(m) {
         const seasons = [...new Set(m.episodes.map((e) => e.season))].sort((a, b) => a - b);
-        const current = m.episode
-          ? `Сезон ${m.episode.season} · Выпуск ${m.episode.number}`
-          : 'Не выбран';
+        const current = m.episode ? m.episode.title : 'Не выбран';
         return `
           <div class="episode-head">
             <span class="label">Выпуск</span>
@@ -116,14 +114,16 @@
             .map(
               (season) => `
               <div class="season-block">
-                <div class="season-title">Сезон ${season}</div>
+                <div class="season-title">${season === 0 ? 'Свои выпуски' : `Сезон ${season}`}</div>
                 <div class="episode-list">
                   ${m.episodes
                     .filter((e) => e.season === season)
                     .sort((a, b) => a.number - b.number)
                     .map(
                       (e) =>
-                        `<button data-episode="${esc(e.id)}" class="${m.episode && m.episode.id === e.id ? 'active' : ''}">Выпуск ${e.number}</button>`
+                        `<button data-episode="${esc(e.id)}" class="${m.episode && m.episode.id === e.id ? 'active' : ''}">${
+                          e.season === 0 ? 'Семейный' : `Выпуск ${e.number}`
+                        }</button>`
                     )
                     .join('')}
                 </div>
