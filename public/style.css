@@ -1129,6 +1129,218 @@ button.primary:active {
   text-align: left;
 }
 
+.hint-audio {
+  margin: 14px 0 10px;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(246, 196, 69, 0.38);
+  background: linear-gradient(180deg, rgba(246, 196, 69, 0.14), rgba(255, 244, 226, 0.03));
+  text-align: left;
+}
+
+.hint-audio-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hint-audio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--display);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.hint-audio-label .media-eq {
+  height: 18px;
+  width: 18px;
+}
+
+.hint-audio-state {
+  font-size: 12px;
+  color: rgba(255, 244, 226, 0.68);
+}
+
+.hint-audio-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.hint-audio-btn,
+.hint-audio-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(246, 196, 69, 0.4);
+  background: rgba(255, 244, 226, 0.04);
+  color: var(--cream);
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
+}
+
+.hint-audio-btn svg,
+.hint-audio-stop svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.hint-audio-btn:hover,
+.hint-audio-stop:hover {
+  background: rgba(246, 196, 69, 0.14);
+  border-color: var(--gold);
+}
+
+.hint-audio-btn:focus-visible,
+.hint-audio-stop:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.hint-audio-btn:active,
+.hint-audio-stop:active {
+  transform: scale(0.98);
+}
+
+.hint-audio-btn.is-active {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, var(--gold), var(--gold-2));
+  color: var(--ink);
+  box-shadow: 0 3px 0 rgba(90, 45, 0, 0.4);
+}
+
+.hint-audio-btn.is-active:hover {
+  background: linear-gradient(180deg, #ffd15c, var(--gold));
+}
+
+.hint-audio-stop {
+  margin-left: auto;
+  border-color: transparent;
+  color: rgba(255, 244, 226, 0.72);
+}
+
+.hint-audio-stop:hover {
+  border-color: var(--border);
+}
+
+.hint-seek {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.hint-time {
+  min-width: 2.6em;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: rgba(255, 244, 226, 0.76);
+}
+
+.hint-time:last-child {
+  text-align: right;
+}
+
+.hint-seek input[type="range"] {
+  --seek-progress: 0%;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.hint-seek input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--gold) var(--seek-progress),
+    rgba(255, 244, 226, 0.22) var(--seek-progress)
+  );
+}
+
+.hint-seek input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  border: 2px solid #2c1407;
+  background: var(--gold);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.hint-seek input[type="range"]::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 244, 226, 0.22);
+}
+
+.hint-seek input[type="range"]::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--gold);
+}
+
+.hint-seek input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #2c1407;
+  background: var(--gold);
+}
+
+.hint-seek input[type="range"]:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.hint-seek input[type="range"]:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (max-width: 720px) {
+  .hint-audio-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .hint-audio-btn,
+  .hint-audio-stop {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .hint-audio-stop {
+    margin-left: 0;
+  }
+}
+
 .answer-status {
   display: flex;
   flex-wrap: wrap;

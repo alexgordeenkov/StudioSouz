@@ -193,6 +193,97 @@ test('revealing a round clears the media layer', async () => {
   assert.equal(party.getState().media, null);
 });
 
+test('hint audio exposes only variants whose files exist', () => {
+  const hintExp = {
+    id: 'hint',
+    name: 'Подсказка',
+    rules: '',
+    rounds: [{ answer: 'Песня', accept: ['песня'], hint: 'H', hintMedia: 'pesnya' }],
+    isCorrect(/** @type {any} */ round, /** @type {string} */ value) {
+      return norm(value) === 'песня';
+    },
+  };
+  const party = new Party({ code: 'ABCD', experiments: { hint: hintExp } });
+  party.selectExperiment('hint');
+  party.startRound();
+
+  assert.equal(party.getState({ forHost: true }).round?.data.hintAudio, undefined);
+  assert.throws(() => party.playHintMedia('vocal'), /недоступен/);
+
+  party.setLocalAudio(['pesnya']);
+  assert.deepEqual(party.getState({ forHost: true }).round?.data.hintAudio, {
+    vocal: '/media/audio/pesnya.mp3',
+  });
+
+  party.setLocalAudio(['pesnya', 'pesnya-instrumental']);
+  assert.deepEqual(party.getState({ forHost: true }).round?.data.hintAudio, {
+    vocal: '/media/audio/pesnya.mp3',
+    instrumental: '/media/audio/pesnya-instrumental.mp3',
+  });
+  assert.equal('hintMedia' in (party.getState().round?.data ?? {}), false);
+});
+
+test('host plays, pauses and switches hint audio before reveal', () => {
+  const hintExp = {
+    id: 'hint',
+    name: 'Подсказка',
+    rules: '',
+    rounds: [{ answer: 'Песня', accept: ['песня'], hint: 'H', hintMedia: 'pesnya' }],
+    isCorrect(/** @type {any} */ round, /** @type {string} */ value) {
+      return norm(value) === 'песня';
+    },
+  };
+  const party = new Party({ code: 'ABCD', experiments: { hint: hintExp } });
+  party.setLocalAudio(['pesnya', 'pesnya-instrumental']);
+  party.selectExperiment('hint');
+  party.startRound();
+
+  const media = party.playHintMedia('instrumental');
+  assert.equal(media.hint, true);
+  assert.equal(media.hintVariant, 'instrumental');
+  assert.equal(media.playing, true);
+
+  party.playHintMedia('instrumental');
+  assert.equal(party.getState().media?.playing, false);
+
+  party.playHintMedia('vocal');
+  assert.equal(party.getState().media?.hintVariant, 'vocal');
+  assert.equal(party.getState().media?.playing, true);
+
+  party.revealHint();
+  party.playHintMedia('instrumental');
+  assert.equal(party.getState().media?.hintVariant, 'instrumental');
+
+  party.revealRound();
+  assert.equal(party.getState().media, null);
+  assert.throws(() => party.playHintMedia('vocal'), /не раунд/);
+});
+
+test('screen progress updates the active hint and seek is clamped', () => {
+  const hintExp = {
+    id: 'hint',
+    name: 'Подсказка',
+    rules: '',
+    rounds: [{ answer: 'Песня', accept: ['песня'], hint: 'H', hintMedia: 'pesnya' }],
+    isCorrect(/** @type {any} */ round, /** @type {string} */ value) {
+      return norm(value) === 'песня';
+    },
+  };
+  const party = new Party({ code: 'ABCD', experiments: { hint: hintExp } });
+  party.setLocalAudio(['pesnya']);
+  party.selectExperiment('hint');
+  party.startRound();
+  const media = party.playHintMedia('vocal');
+
+  assert.equal(party.mediaProgress('other', 10, 100), false);
+  assert.equal(party.mediaProgress(media.id, 42, 195), true);
+  assert.deepEqual(party.getState({ forHost: true }).media?.progress, { currentTime: 42, duration: 195 });
+
+  party.seekMedia(250);
+  assert.equal(party.getState().media?.seekTo, 195);
+  assert.equal(party.getState().media?.seekToken, 1);
+});
+
 test('a round reveal can play the full version and clears it on results', async () => {
   const mediaExp = {
     id: 'media',

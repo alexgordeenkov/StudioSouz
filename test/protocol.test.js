@@ -41,6 +41,22 @@ function makeParty() {
   return new Party({ code: 'ABCD', experiments: { test: testExp }, mediaResolver: fakeMedia });
 }
 
+const hintExp = {
+  id: 'hint',
+  name: 'Подсказка',
+  rules: '',
+  rounds: [{ answer: 'Песня', accept: ['песня'], hint: 'H', hintMedia: 'pesnya' }],
+  isCorrect(/** @type {any} */ round, /** @type {string} */ value) {
+    return norm(value) === 'песня';
+  },
+};
+
+function makeHintParty() {
+  const party = new Party({ code: 'ABCD', experiments: { hint: hintExp } });
+  party.setLocalAudio(['pesnya', 'pesnya-instrumental']);
+  return party;
+}
+
 function stateOf(effects) {
   return effects.find((e) => e.payload.type === 'state');
 }
@@ -168,6 +184,70 @@ test('non-host cannot control media', async () => {
   const ctrl = mkConn('controller', '1');
   const effects = await handleMessage(party, ctrl, { type: 'media-play', title: 'Песня' }, [ctrl]);
   assert.ok(effects.some((e) => e.payload.type === 'error'));
+});
+
+test('host plays an audio hint and non-host cannot', async () => {
+  const party = makeHintParty();
+  const host = mkConn('host');
+  const ctrl = mkConn('controller');
+  await handleMessage(party, host, { type: 'start-experiment', experimentId: 'hint' }, [host, ctrl]);
+  await handleMessage(party, host, { type: 'start-round' }, [host, ctrl]);
+
+  const denied = await handleMessage(party, ctrl, { type: 'play-hint', variant: 'vocal' }, [host, ctrl]);
+  assert.ok(denied.some((e) => e.payload.type === 'error'));
+
+  const played = await handleMessage(party, host, { type: 'play-hint', variant: 'instrumental' }, [host, ctrl]);
+  assert.equal(party.getState().media?.hintVariant, 'instrumental');
+  assert.equal(stateOf(played)?.payload.media?.hint, true);
+});
+
+test('screen progress is relayed to hosts only', async () => {
+  const party = makeHintParty();
+  const host = mkConn('host');
+  const screen = mkConn('screen');
+  const ctrl = mkConn('controller');
+  await handleMessage(party, host, { type: 'start-experiment', experimentId: 'hint' }, [host, screen, ctrl]);
+  await handleMessage(party, host, { type: 'start-round' }, [host, screen, ctrl]);
+  await handleMessage(party, host, { type: 'play-hint', variant: 'vocal' }, [host, screen, ctrl]);
+  const mediaId = party.getState().media.id;
+
+  const ignored = await handleMessage(
+    party,
+    ctrl,
+    { type: 'media-progress', mediaId, currentTime: 10, duration: 100 },
+    [host, screen, ctrl]
+  );
+  assert.equal(ignored.length, 0);
+
+  const effects = await handleMessage(
+    party,
+    screen,
+    { type: 'media-progress', mediaId, currentTime: 10, duration: 100 },
+    [host, screen, ctrl]
+  );
+  assert.ok(
+    effects.some(
+      (e) => e.target === host && e.payload.type === 'media-progress' && e.payload.currentTime === 10
+    )
+  );
+  assert.equal(effects.some((e) => e.target === ctrl && e.payload.type === 'media-progress'), false);
+  assert.equal(party.getState().media?.progress?.currentTime, 10);
+});
+
+test('host seeks hint audio; non-host cannot', async () => {
+  const party = makeHintParty();
+  const host = mkConn('host');
+  const ctrl = mkConn('controller');
+  await handleMessage(party, host, { type: 'start-experiment', experimentId: 'hint' }, [host, ctrl]);
+  await handleMessage(party, host, { type: 'start-round' }, [host, ctrl]);
+  await handleMessage(party, host, { type: 'play-hint', variant: 'vocal' }, [host, ctrl]);
+
+  const denied = await handleMessage(party, ctrl, { type: 'media-seek', seconds: 30 }, [host, ctrl]);
+  assert.ok(denied.some((e) => e.payload.type === 'error'));
+
+  await handleMessage(party, host, { type: 'media-seek', seconds: 30 }, [host, ctrl]);
+  assert.equal(party.getState().media?.seekTo, 30);
+  assert.equal(party.getState().media?.seekToken, 1);
 });
 
 const drawExp = {

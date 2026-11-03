@@ -6,3 +6,7 @@ node_modules/
 public/media/audio/*.mp3
 public/media/audio/*.m4a
 public/media/audio/*.ogg
+
+# Impeccable local artifacts
+.impeccable/
+
