@@ -107,6 +107,28 @@ h2 {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
+.sound-unlock {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(20px, 4vh, 44px);
+  transform: translateX(-50%);
+  z-index: 120;
+  padding: 14px 28px;
+  border: 2px solid var(--gold);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--gold), var(--gold-2));
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: clamp(16px, 1.4vw, 24px);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow:
+    0 6px 0 rgba(90, 45, 0, 0.5),
+    0 18px 40px rgba(0, 0, 0, 0.35);
+}
+
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {
