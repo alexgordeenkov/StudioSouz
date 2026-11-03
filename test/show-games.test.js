@@ -4,6 +4,7 @@ import {
   songAboutSong,
   degradeMelody,
   retranslation,
+  rhymeBall,
 } from '../src/experiments/show-games.js';
 import { Party } from '../src/party.js';
 
@@ -64,5 +65,33 @@ test('retranslation shows the distorted text and hides the answer', () => {
   party.startRound();
   const data = party.getState().round.data;
   assert.equal(data.text, text);
+  assert.equal('answer' in data, false);
+});
+
+test('rhyme-ball is a choice quiz with a hidden answer', () => {
+  const round = {
+    prompt: 'Чем заканчивается песня?',
+    options: ['Дикобраз', 'Гондурас', 'Унитаз', 'Голубой'],
+    answer: 'Унитаз',
+  };
+  assert.equal(rhymeBall.isCorrect(round, 'унитаз'), true);
+  assert.equal(rhymeBall.isCorrect(round, 'Гондурас'), false);
+
+  const pack = {
+    id: 'e39',
+    season: 3,
+    number: 39,
+    rounds: { [rhymeBall.id]: [round] },
+  };
+  const party = new Party({
+    code: 'ABCD',
+    experiments: { [rhymeBall.id]: rhymeBall },
+    episodes: [pack],
+  });
+  party.selectExperiment(rhymeBall.id);
+  party.startRound();
+  const data = party.getState().round.data;
+  assert.deepEqual(data.options, round.options);
+  assert.equal(data.prompt, round.prompt);
   assert.equal('answer' in data, false);
 });
